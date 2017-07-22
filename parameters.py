@@ -40,6 +40,7 @@ class Detector:
 class Flux:
     """reactor flux"""
     def __init__(self, ty):
+        self.ty = ty
         if ty.lower() == 'reactor':
             self.evMin = 0.0
             self.evMax = 0.01   # GeV
@@ -54,13 +55,22 @@ class Flux:
             fpers = 3.0921*(10**16)     # antineutrinos per fission
             nuperf = 6.14102
             self.__nuflux1m = nuperf*fpers/(4*pi)*((MeterByJoule*GeVPerJoule)**2)
+        elif ty.lower() == 'sns':
+            self.evMin = 0
+            self.evMax = 52*(10**-3)
+            self.flUn = 0.02
+            self.__norm = 4.3*(10**3)*((MeterByJoule*GeVPerJoule)**2)
         else:
             raise Exception("No such flux in code yet.")
 
     def flux(self, ev):
+        if self.ty == 'sns':
+            return self.nuef(ev)+self.numf(ev)+self.nupf(ev)
         return self.__fl(ev)[()]*self.__nuflux1m/self.__norm
 
     def fint(self, er, m):
+        if self.ty == 'sns':
+            return self.nuefint(er)+self.numfint(er)+self.nupfint(er)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
@@ -68,22 +78,80 @@ class Flux:
         return quad(self.flux, emin, self.evMax, limit=2*p.shape[0], points=p)[0]
 
     def fintinv(self, er, m):
-        emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if self.ty == 'sns':
+            return self.nuefinv(er)+self.numfinv(er)+self.nupfinv(er)
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
             return 0.0
         def finv(ev):
             return self.flux(ev)/ev
-        return quad(finv, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        return quad(finv, emin, self.evMax, limit=2*p.shape[0], points=p)[0]
 
     def fintinvs(self, er, m):
-        emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if self.ty == 'sns':
+            return self.nuefinvs(er)+self.numfinvs(er)+self.nupfinvs(er)
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
             return 0.0
         def finvs(ev):
             return self.flux(ev)/(ev**2)
-        return quad(finvs, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        return quad(finvs, emin, self.evMax, limit=2*p.shape[0], points=p)[0]
+
+    def nuef(self, ev):
+        return (3*((ev/(2/3*52))**2)-2*((ev/(2/3*52))**2))/29.25*self.__norm
+
+    def nuefint(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        return quad(self.nuef, emin, self.evMax)[0]
+
+    def nuefinv(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        def finv(ev):
+            return self.nuef(ev)/ev
+        return quad(finv, emin, self.evMax)[0]
+
+    def nuefinvs(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        def finvs(ev):
+            return self.nuef(ev)/(ev**2)
+        return quad(finvs, emin, self.evMax)[0]
+
+    def numf(self, ev):
+        return (3*((ev/52)**2)-2*((ev/52)**2))/26*self.__norm
+
+    def numfint(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        return quad(self.numf, emin, self.evMax)
+
+    def numfinv(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        def finv(ev):
+            return self.numf(ev)/ev
+        return quad(finv, emin, self.evMax)[0]
+
+    def numfinvs(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        def finvs(ev):
+            return self.numf(ev)/(ev**2)
+        return quad(finvs, emin, self.evMax)[0]
+
+    @staticmethod
+    def nupf(ev):
+        return math.inf if ev == 0.029 else 0
+
+    def nupfint(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        return self.__norm if emin <= 0.029 else 0
+
+    def nupfinv(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        return self.__norm/0.029 if emin <= 0.029 else 0
+
+    def nupfinvs(self, er, m):
+        emin = 0.5*(sqrt(er**2+2*er*m)+er)
+        return self.__norm/(0.029**2) if emin <= 0.029 else 0
 
 
 def couplings():
