@@ -65,12 +65,12 @@ class Flux:
 
     def flux(self, ev):
         if self.ty == 'sns':
-            return self.nuef(ev)+self.numf(ev)+self.nupf(ev)
+            return self.nuef(ev)
         return self.__fl(ev)[()]*self.__nuflux1m/self.__norm
 
     def fint(self, er, m):
         if self.ty == 'sns':
-            return self.nuefint(er)+self.numfint(er)+self.nupfint(er)
+            return self.nuefint(er)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
@@ -79,7 +79,7 @@ class Flux:
 
     def fintinv(self, er, m):
         if self.ty == 'sns':
-            return self.nuefinv(er)+self.numfinv(er)+self.nupfinv(er)
+            return self.nuefinv(er)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
@@ -90,7 +90,7 @@ class Flux:
 
     def fintinvs(self, er, m):
         if self.ty == 'sns':
-            return self.nuefinvs(er)+self.numfinvs(er)+self.nupfinvs(er)
+            return self.nuefinvs(er)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
