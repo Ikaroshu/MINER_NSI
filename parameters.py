@@ -59,7 +59,7 @@ class Flux:
             self.evMin = 0
             self.evMax = 52*(10**-3)
             self.flUn = 0.02
-            self.__norm = 4.3*(10**3)*((MeterByJoule*GeVPerJoule)**2)
+            self.__norm = 4.3*(10**11)*((MeterByJoule*GeVPerJoule)**2)
         else:
             raise Exception("No such flux in code yet.")
 
@@ -70,7 +70,7 @@ class Flux:
 
     def fint(self, er, m):
         if self.ty == 'sns':
-            return self.nuefint(er)
+            return self.nuefint(er, m)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
@@ -79,7 +79,7 @@ class Flux:
 
     def fintinv(self, er, m):
         if self.ty == 'sns':
-            return self.nuefinv(er)
+            return self.nuefinv(er, m)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
@@ -90,7 +90,7 @@ class Flux:
 
     def fintinvs(self, er, m):
         if self.ty == 'sns':
-            return self.nuefinvs(er)
+            return self.nuefinvs(er, m)
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
         p = self.__t0[where(self.__t0 >= emin)]
         if p.shape[0] == 0:
@@ -100,7 +100,7 @@ class Flux:
         return quad(finvs, emin, self.evMax, limit=2*p.shape[0], points=p)[0]
 
     def nuef(self, ev):
-        return (3*((ev/(2/3*52))**2)-2*((ev/(2/3*52))**2))/29.25*self.__norm
+        return (3*((ev*1000/(2/3*52))**2)-2*((ev*1000/(2/3*52))**2))/29.25*1000*self.__norm     # in GeV
 
     def nuefint(self, er, m):
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
@@ -119,11 +119,11 @@ class Flux:
         return quad(finvs, emin, self.evMax)[0]
 
     def numf(self, ev):
-        return (3*((ev/52)**2)-2*((ev/52)**2))/26*self.__norm
+        return (3*((ev*1000/52)**2)-2*((ev*1000/52)**2))/26*1000*self.__norm
 
     def numfint(self, er, m):
         emin = 0.5*(sqrt(er**2+2*er*m)+er)
-        return quad(self.numf, emin, self.evMax)
+        return quad(self.numf, emin, self.evMax)[0]
 
     def numfinv(self, er, m):
         emin = 0.5*(sqrt(er**2+2*er*m)+er)

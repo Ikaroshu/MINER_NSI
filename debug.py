@@ -93,12 +93,12 @@ from matplotlib.pyplot import subplots
 # p.join()
 # print(tt)
 
-# generate_1d_results('Ge', 'ee', 20, "linear")
-# generate_1d_results('Si', 'ee', 20, "linear")
-# generate_1d_results('Ge', 'em', 20, "linear")
-# generate_1d_results('Si', 'em', 20, "linear")
-# generate_1d_results('Ge', 'et', 20, "linear")
-# generate_1d_results('Si', 'et', 20, "linear")
+# generate_1d_results('Ge', 'sns', 'mm', 20, "linear")
+# generate_1d_results('Si', 'sns', 'mm', 20, "linear")
+# generate_1d_results('Ge', 'sns', 'em', 20, "linear")
+# generate_1d_results('Si', 'sns', 'em', 20, "linear")
+# generate_1d_results('Ge', 'sns', 'mt', 20, "linear")
+# generate_1d_results('Si', 'sns', 'mt', 20, "linear")
 # generate_2d_results('Ge', 10**-3, 4)
 # generate_2d_results('Si', 10**-3, 4)
 
@@ -106,9 +106,9 @@ from matplotlib.pyplot import subplots
 # g2 = couplings()
 # g2['uee'] = 0.3
 # g2['dee'] = 0.3
-# generate_excl('Ge', g1, '0')
-# generate_excl('Ge', g2, '3')
-# generate_excl('Si', g1, '0')
+# generate_excl('Ge', 'sns', '0')
+# # generate_excl('Ge', g2, '3')
+# generate_excl('Si', 'sns', '0')
 # generate_excl('Si', g2, '3')
 
 # plot2d(-4, 2)
@@ -191,17 +191,16 @@ from matplotlib.pyplot import subplots
 #     # print(r3)
 # test()
 # start = time()
-# d = Detector("Si")
-# f = Flux("reactor")
-# mv = 2.97635144163e-05
+# d = Detector("Ge")
+# f = Flux("sns")
+# mv = 0.0316227766017
 # expo = 1000
 # g = couplings()
-# d.erMin /= 4
-# # g['uee'] = 10**-9
-# chi = Chisquare(d, f, g, mv, expo, 20, "linear")
-# print(chi.det.erMin)
-# chi.g['uem'] = 10**-9
-# r = chi.tmu_binned()
+# g['umm'] = 10**-9
+# chi = Chisquare(d, f, couplings(), mv, expo, 20, "linear")
+# # chi.g['umm'] = 3e-5
+# # print(chi.det.erMin)
+# r = find_excl(chi, 'mm', 1)
 # print(r)
 # end = time()
 # print(end-start)
@@ -262,12 +261,12 @@ from matplotlib.pyplot import subplots
 # p.close()
 # p.join()
 
-# generate_excl('Ge', '0')
-# generate_excl('Si', '0')
+generate_excl('Ge', 'sns', '0')
+generate_excl('Si', 'sns', '0')
 # generate_excl('Ge', '3')
 # generate_excl('Si', '3')
-plot_excl('Si', '0')
-plot_excl('Si', '3')
+# plot_excl('Si', '0')
+# plot_excl('Si', '3')
 
 # plot1d()
 # epsi = [0.3, 0.3]
@@ -276,4 +275,22 @@ plot_excl('Si', '3')
 # g['dee'] = epsi[1]*(((10**-3)**2)*2*sqrt(2)*gf)
 # chi = Chisquare(Detector('Ge'), Flux('reactor'), g, 10**-3, 1000, 20)
 # r = find_excl(chi, -1)
+# print(r)
+
+# mv = 10**-3
+# det = Detector("Ge")
+# fx = Flux('sns')
+# g = couplings()
+# r = snsrates(10**-6, mv, det, fx, g)
+# print(r)
+
+#
+# d = Detector("Ge")
+# f = Flux("sns")
+# mv = 0.0316227766017
+# expo = 1000
+# g = couplings()
+# g['umm'] = 10**-9
+# chi = Chisquare(d, f, couplings(), mv, expo, 20, "linear")
+# r = find_excl(chi, 'mm', -1)
 # print(r)

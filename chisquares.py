@@ -128,6 +128,13 @@ def find_discov(chi, nsi, d, sigma=4.28):
             chi.g[nsi] /= 10
             deno = 2*sqrt(2)*gf*(2*chi.det.m*(0.8*(10**-7))+chi.mv**2)
             te = 0.5*chi.det.z*(0.5-2*ssw+2*chi.g['uee']/deno+chi.g['dee']/deno) + 0.5*chi.det.n*(-0.5+chi.g['uee']/deno+2*chi.g['dee']/deno)
+    elif nsi == 'umm' or nsi == 'dmm':
+        deno = 2*sqrt(2)*gf*(2*chi.det.m*(0.8*(10**-7))+chi.mv**2)
+        te = 0.5*chi.det.z*(0.5-2*ssw+2*chi.g['umm']/deno+chi.g['dmm']/deno)+0.5*chi.det.n*(-0.5+chi.g['umm']/deno+2*chi.g['dmm']/deno)
+        while te >= 0:
+            chi.g[nsi] /= 10
+            deno = 2*sqrt(2)*gf*(2*chi.det.m*(0.8*(10**-7))+chi.mv**2)
+            te = 0.5*chi.det.z*(0.5-2*ssw+2*chi.g['umm']/deno+chi.g['dmm']/deno)+0.5*chi.det.n*(-0.5+chi.g['umm']/deno+2*chi.g['dmm']/deno)
     ts = tsp = chi.tmu_binned()
     while tsp >= ts > sigma**2 or tsp <= ts < sigma**2:
         if tsp >= ts > sigma**2:
@@ -147,36 +154,39 @@ def find_discov(chi, nsi, d, sigma=4.28):
         order -= 1
 
 
-def find_excl(chi, d, sigma=3):
+def find_excl(chi, nsi, d, sigma=3):
     g = couplings()
-    effg = ((2*chi.det.z+chi.det.n)*chi.g['uee']+(chi.det.z+2*chi.det.n)*chi.g['dee'])/(2*chi.det.z+chi.det.n)
+    effg = ((2*chi.det.z+chi.det.n)*chi.g['u'+nsi]+(chi.det.z+2*chi.det.n)*chi.g['d'+nsi])/(2*chi.det.z+chi.det.n)
     if effg != 0.0:
         order = floor(log10(effg))
-        g['uee'] = effg+0.5*d*(10**order)
+        g['u'+nsi] = effg+0.5*d*(10**order)
     else:
-        g['uee'] = d*(10**-10)
+        g['u'+nsi] = d*(10**-9)
     # print(effg)
-    # print(g['uee'])
+    # print(g['u'+nsi])
     ts = tsp = chi.tmuc(g)
     while tsp >= ts > sigma**2 or tsp <= ts < sigma**2:
         if tsp >= ts > sigma**2:
-            g['uee'] = effg+(g['uee']-effg)/10
+            g['u'+nsi] = effg+(g['u'+nsi]-effg)/10
             tsp = ts
             ts = chi.tmuc(g)
         if tsp <= ts < sigma**2:
-            g['uee'] = effg+(g['uee']-effg)*10
+            g['u'+nsi] = effg+(g['u'+nsi]-effg)*10
             tsp = ts
             ts = chi.tmuc(g)
-    g['uee'] = g['uee'] if tsp >= ts else effg+(g['uee']-effg)/10
-    si = sign(g['uee'])
-    order = floor(log10(si*g['uee']))-1
+    g['u'+nsi] = g['u'+nsi] if tsp >= ts else effg+(g['u'+nsi]-effg)/10
+    # if effg != 0.0:
+    #     si = sign(g['u'+nsi])
+    # else:
+    #     si = 1
+    order = floor(log10(abs(g['u'+nsi])))-1
     tsp = chi.tmuc(g)
     while abs(tsp-sigma**2) > 0.1:
         while tsp < sigma**2:
-            g['uee'] += d*si*(10**order)
+            g['u'+nsi] += d*(10**order)
             tsp = chi.tmuc(g)
-        g['uee'] -= d*si*(10**order)
+        g['u'+nsi] -= d*(10**order)
         order -= 1
         tsp = chi.tmuc(g)
         # print(tsp)
-    return g['uee']
+    return g['u'+nsi]
