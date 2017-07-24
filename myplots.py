@@ -1,18 +1,23 @@
 from matplotlib.pyplot import subplots, get_cmap
-
 from chisquares import *
 
 
-def plot1d():
+def plot1d(ty):
     mv = logspace(-6, 1, 20)
     mvv = logspace(log10(mv[0]), log10(mv[mv.shape[0] - 1]), num=100)
     fig, axes = subplots(nrows=2, ncols=3, sharey='row', sharex='col')
+    if ty.lower() == 'sns':
+        ec = 'sns'
+    elif ty.lower() == 'reactor':
+        ec = ''
+    else:
+        raise Exception('no such data yet!')
 
     def p1u(ax, nsi):
-        uge = load('./outputdata/u' + nsi + '4Ge20linear.npy')
-        usi = load('./outputdata/u' + nsi + '4Si20linear.npy')
-        uged = load('./outputdata/u' + nsi + 'd4Ge20linear.npy')
-        usid = load('./outputdata/u' + nsi + 'd4Si20linear.npy')
+        uge = load('./outputdata/' + ec + 'u' + nsi + '4Ge20linear.npy')
+        usi = load('./outputdata/' + ec + 'u' + nsi + '4Si20linear.npy')
+        uged = load('./outputdata/' + ec + 'u' + nsi + 'd4Ge20linear.npy')
+        usid = load('./outputdata/' + ec + 'u' + nsi + 'd4Si20linear.npy')
         gge_intp = interp1d(mv, uge, kind='cubic')
         gsi_intp = interp1d(mv, usi, kind='cubic')
         gged_intp = interp1d(mv, uged, kind='cubic')
@@ -26,11 +31,11 @@ def plot1d():
         ax.plot(mvv, ggged, color="r", alpha=0.8)
         ax.plot(mvv, ggsid, color="b", alpha=0.8)
 
-    def p1d(ax, nsi):
-        uge = load('./outputdata/u' + nsi + '4Ge20linear.npy')
-        usi = load('./outputdata/u' + nsi + '4Si20linear.npy')
-        uged = load('./outputdata/u' + nsi + 'd4Ge20linear.npy')
-        usid = load('./outputdata/u' + nsi + 'd4Si20linear.npy')
+    def p1d(ax, nsi):       # down quark
+        uge = load('./outputdata/' + ec + 'u' + nsi + '4Ge20linear.npy')
+        usi = load('./outputdata/' + ec + 'u' + nsi + '4Si20linear.npy')
+        uged = load('./outputdata/' + ec + 'u' + nsi + 'd4Ge20linear.npy')
+        usid = load('./outputdata/' + ec + 'u' + nsi + 'd4Si20linear.npy')
         gge_intp = interp1d(mv, uge, kind='cubic')
         gsi_intp = interp1d(mv, usi, kind='cubic')
         gged_intp = interp1d(mv, uged, kind='cubic')
@@ -55,40 +60,56 @@ def plot1d():
     axes[0][2].set_xscale('log')
     axes[0][0].set_ylim([-10, 10])
     axes[1][0].set_ylim([-10, 10])
-    axes[0][0].set_yscale('symlog', lintreshy=2)
-    axes[1][0].set_yscale('symlog', lintreshy=2)
-    p1u(axes[0][0], 'ee')
-    p1d(axes[1][0], 'ee')
-    p1u(axes[0][1], 'em')
-    p1u(axes[0][2], 'em')
-    p1d(axes[1][1], 'em')
-    p1d(axes[1][2], 'em')
+    # axes[0][0].set_yscale('symlog', lintreshy=2)
+    # axes[1][0].set_yscale('symlog', lintreshy=2)
+    if ty.lower() == 'sns':
+        p1u(axes[0][0], 'mm')
+        p1d(axes[1][0], 'mm')
+        p1u(axes[0][1], 'em')
+        p1u(axes[0][2], 'em')
+        p1d(axes[1][1], 'em')
+        p1d(axes[1][2], 'em')
+    elif ty.lower() == 'reactor':
+        p1u(axes[0][0], 'ee')
+        p1d(axes[1][0], 'ee')
+        p1u(axes[0][1], 'em')
+        p1u(axes[0][2], 'em')
+        p1d(axes[1][1], 'em')
+        p1d(axes[1][2], 'em')
 
     def f1(ax, l, h):
         c1 = full(mvv.shape, l)
         c2 = full(mvv.shape, h)
         ax.fill_between(mvv, c1, c2, alpha=0.5, color="gray")
 
-    f1(axes[0][0], -1.19, -0.81)
-    f1(axes[0][0], 0.00, 0.51)
-    f1(axes[0][1], -0.09, 0.10)
-    f1(axes[0][2], -0.15, 0.14)
-    f1(axes[1][0], -1.17, -1.03)
-    f1(axes[1][0], 0.02, 0.51)
-    f1(axes[1][1], -0.09, 0.08)
-    f1(axes[1][2], -0.13, 0.14)
-    axes[0][0].text(1e-5, 0.7, r"$\epsilon^{u}_{ee}$")
-    axes[0][1].text(1e-5, 0.7, r"$\epsilon^{u}_{e\mu}$")
-    axes[0][2].text(1e-5, 0.7, r"$\epsilon^{u}_{e\tau}$")
-    axes[1][0].text(1e-5, 0.7, r"$\epsilon^{d}_{ee}$")
-    axes[1][1].text(1e-5, 0.7, r"$\epsilon^{d}_{e\mu}$")
-    axes[1][2].text(1e-5, 0.7, r"$\epsilon^{d}_{e\tau}$")
+    if ty.lower() == 'reactor':
+        f1(axes[0][0], -1.19, -0.81)
+        f1(axes[0][0], 0.00, 0.51)
+        f1(axes[0][1], -0.09, 0.10)
+        f1(axes[0][2], -0.15, 0.14)
+        f1(axes[1][0], -1.17, -1.03)
+        f1(axes[1][0], 0.02, 0.51)
+        f1(axes[1][1], -0.09, 0.08)
+        f1(axes[1][2], -0.13, 0.14)
+        axes[0][0].text(1e-5, 0.7, r"$\epsilon^{u}_{ee}$")
+        axes[0][1].text(1e-5, 0.7, r"$\epsilon^{u}_{e\mu}$")
+        axes[0][2].text(1e-5, 0.7, r"$\epsilon^{u}_{e\tau}$")
+        axes[1][0].text(1e-5, 0.7, r"$\epsilon^{d}_{ee}$")
+        axes[1][1].text(1e-5, 0.7, r"$\epsilon^{d}_{e\mu}$")
+        axes[1][2].text(1e-5, 0.7, r"$\epsilon^{d}_{e\tau}$")
+    elif ty.lower() == 'sns':
+        axes[0][0].text(1e-5, 0.7, r"$\epsilon^{u}_{\mu\mu}$")
+        axes[0][1].text(1e-5, 0.7, r"$\epsilon^{u}_{e\mu}$")
+        axes[0][2].text(1e-5, 0.7, r"$\epsilon^{u}_{\mu\tau}$")
+        axes[1][0].text(1e-5, 0.7, r"$\epsilon^{d}_{\mu\mu}$")
+        axes[1][1].text(1e-5, 0.7, r"$\epsilon^{d}_{e\mu}$")
+        axes[1][2].text(1e-5, 0.7, r"$\epsilon^{d}_{\mu\tau}$")
     axes[0][1].plot([], [], color="r", label="Ge")
     axes[0][1].plot([], [], color="b", label="Si")
     axes[0][1].legend(loc='upper center', bbox_to_anchor=(0.5, 1.25), ncol=2)
     axes[1][1].set_xlabel(r"$m_v/GeV$")
     # fig.tight_layout()
-    fig.savefig("./plots/1dsymlog.pdf")
+    fig.savefig("./plots/" + ty + "1d.pdf")
 
 
 def plot2d(mv, th):
@@ -181,10 +202,14 @@ def p_tmu_nbins():
 #     fig.savefig('./plots/tmu_sigma_-9_-3.pdf')
 
 
-def plot_excl(ty, tag):
+def plot_excl(ty, f, tag):
     mv = logspace(-3, -1, 5)
-    uee = load('./outputdata/uee_excl_-4_1000_linear' + tag + ty + '.npy')
-    ueed = load('./outputdata/uee_excl_-4d_1000_linear' + tag + ty + '.npy')
+    if f == 'sns':
+        uee = load('./outputdata/snsumm_excl_-4_1000_linear' + tag + ty + '.npy')
+        ueed = load('./outputdata/snsumm_excl_-4d_1000_linear' + tag + ty + '.npy')
+    elif f == 'reactor':
+        uee = load('./outputdata/uee_excl_-4_1000_linear' + tag + ty + '.npy')
+        ueed = load('./outputdata/uee_excl_-4d_1000_linear' + tag + ty + '.npy')
     det = Detector(ty)
     cmap = get_cmap('jet_r')
     fig, ax = subplots()
@@ -194,10 +219,52 @@ def plot_excl(ty, tag):
         dd = (2 * det.z + det.n) / (2 * det.n + det.z) * (ueed[i] / ((mv[i] ** 2) * 2 * sqrt(2) * gf) - u)
         ax.plot(u, d, label='{:.1e} MeV'.format(mv[i] * 1000), color=cmap(float(i) / 5))
         ax.plot(u, dd, color=cmap(float(i) / 5))
-    ax.set_xlabel(r"$\epsilon^u_{ee}$")
-    ax.set_ylabel(r"$\epsilon^d_{ee}$")
+    if f == 'sns':
+        ax.set_xlabel(r"$\epsilon^u_{\mu\mu}$")
+        ax.set_ylabel(r"$\epsilon^d_{\mu\mu}$")
+    elif f == 'reactor':
+        ax.set_xlabel(r"$\epsilon^u_{ee}$")
+        ax.set_ylabel(r"$\epsilon^d_{ee}$")
     ax.set_title(r"$3\sigma$ region for different mediator mass")
     ax.set_xlim([-1, 1])
     ax.set_ylim([-1, 1])
     ax.legend()
-    fig.savefig('./plots/excl_' + ty + tag + '.pdf')
+    fig.savefig('./plots/excl_' + f + ty + tag + '.pdf')
+
+
+def plot_combined(f, tag, m):
+    mv = logspace(-3, -1, 5)
+    if f == 'sns':
+        ueege = load('./outputdata/snsumm_excl_-4_1000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesi = load('./outputdata/snsumm_excl_-4_1000_linear' + tag + 'Si' + '.npy')[m]
+        ueeged = load('./outputdata/snsumm_excl_-4d_1000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesid = load('./outputdata/snsumm_excl_-4d_1000_linear' + tag + 'Si' + '.npy')[m]
+    elif f == 'reactor':
+        ueege = load('./outputdata/uee_excl_-4_1000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesi = load('./outputdata/uee_excl_-4_1000_linear' + tag + 'Si' + '.npy')[m]
+        ueeged = load('./outputdata/uee_excl_-4d_1000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesid = load('./outputdata/uee_excl_-4d_1000_linear' + tag + 'Si' + '.npy')[m]
+    detge = Detector('Ge')
+    detsi = Detector('Si')
+    if f == 'reactor':
+        u = linspace(-0.1, 0.1, 100)
+    elif f == 'sns':
+        u = linspace(-1, 1, 100)
+    dge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z) * (ueege / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
+    ddge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z) * (ueeged / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
+    dsi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z) * (ueesi / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
+    ddsi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z) * (ueesid / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
+    fig, ax = subplots()
+    ax.plot(u, dge, color='red', label='ge')
+    ax.plot(u, ddge, color='red')
+    ax.plot(u, dsi, color='blue', label='si')
+    ax.plot(u, ddsi, color='blue')
+    ax.legend()
+    if f == 'sns':
+        ax.set_xlabel(r"$\epsilon^u_{\mu\mu}$")
+        ax.set_ylabel(r"$\epsilon^d_{\mu\mu}$")
+    elif f == 'reactor':
+        ax.set_xlabel(r"$\epsilon^u_{ee}$")
+        ax.set_ylabel(r"$\epsilon^d_{ee}$")
+    ax.set_title(r"$m_v$ = {:.1e} MeV".format(mv[m] * 1000))
+    fig.savefig('./plots/combine_' + f + tag + str(m) + '.pdf')
