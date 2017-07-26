@@ -47,15 +47,15 @@ class Flux:
             self.evMin = 0.0
             self.evMax = 0.01  # GeV
             self.flUn = 0.02
-            self.__tb = genfromtxt('reactor_flux.csv', delimiter=",")
-            self.__t0 = self.__tb[:, 0]
-            self.__t1 = self.__tb[:, 1]
-            self.__fl = interp1d(self.__t0, self.__t1)
-
-            def f(ev):
-                return self.__fl(ev)[()]
-
-            self.__norm = quad(f, self.evMin, self.evMax, limit=2 * self.__t0.shape[0], points=self.__t0)[0]
+            # self.__tb = genfromtxt('reactor_flux.csv', delimiter=",")
+            # self.__t0 = self.__tb[:, 0]
+            # self.__t1 = self.__tb[:, 1]
+            # self.__fl = interp1d(self.__t0, self.__t1)
+            #
+            # def f(ev):
+            #     return self.__fl(ev)[()]
+            #
+            # self.__norm = quad(f, self.evMin, self.evMax, limit=2 * self.__t0.shape[0], points=self.__t0)[0]
             fpers = 3.0921 * (10 ** 16)  # antineutrinos per fission
             nuperf = 6.14102
             self.__nuflux1m = nuperf * fpers / (4 * pi) * ((MeterByJoule * GeVPerJoule) ** 2)
@@ -70,42 +70,46 @@ class Flux:
     def flux(self, ev):
         if self.ty == 'sns':
             return self.nuef(ev)
-        return self.__fl(ev)[()] * self.__nuflux1m / self.__norm
+        # return self.__fl(ev)[()] * self.__nuflux1m / self.__norm
+        return exp(0.87 - 0.16 * (ev * 1000) - 0.091 * ((ev * 1000) ** 2)) / 0.005323608902707208 * self.__nuflux1m
 
     def fint(self, er, m):
         if self.ty == 'sns':
             return self.nuefint(er, m)
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        p = self.__t0[where(self.__t0 >= emin)]
-        if p.shape[0] == 0:
-            return 0.0
-        return quad(self.flux, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        # p = self.__t0[where(self.__t0 >= emin)]
+        # if p.shape[0] == 0:
+        #     return 0.0
+        # return quad(self.flux, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        return quad(self.flux, emin, self.evMax)[0]
 
     def fintinv(self, er, m):
         if self.ty == 'sns':
             return self.nuefinv(er, m)
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        p = self.__t0[where(self.__t0 >= emin)]
-        if p.shape[0] == 0:
-            return 0.0
+        # p = self.__t0[where(self.__t0 >= emin)]
+        # if p.shape[0] == 0:
+        #     return 0.0
 
         def finv(ev):
             return self.flux(ev) / ev
 
-        return quad(finv, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        # return quad(finv, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        return quad(finv, emin, self.evMax)[0]
 
     def fintinvs(self, er, m):
         if self.ty == 'sns':
             return self.nuefinvs(er, m)
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        p = self.__t0[where(self.__t0 >= emin)]
-        if p.shape[0] == 0:
-            return 0.0
+        # p = self.__t0[where(self.__t0 >= emin)]
+        # if p.shape[0] == 0:
+        #     return 0.0
 
         def finvs(ev):
             return self.flux(ev) / (ev ** 2)
 
-        return quad(finvs, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        # return quad(finvs, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
+        return quad(finvs, emin, self.evMax)[0]
 
     def nuef(self, ev):
         return (3 * ((ev * 1000 / (2 / 3 * 52)) ** 2) - 2 * (
