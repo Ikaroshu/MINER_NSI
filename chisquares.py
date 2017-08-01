@@ -47,25 +47,25 @@ class Chisquare:
             2 * (self.det.bgUn ** 2)))  # n! is constant
 
     def findl0(self, bsm, sm, bg):
-        def f(x):
-            return -self.lgl(x[0], x[1], 0, bsm, sm, bg)  # minimize
+        def f(n):
+            return -self.lgl(n[0], n[1], 0, bsm, sm, bg)  # minimize
 
-        def f_der(x):
+        def f_der(n):
             ni = bsm + sm + bg
-            nui = x[0] * (sm + x[1] * bg)
-            der = zeros_like(x)
-            der[0] = sum((ni / nui - 1) * (sm + x[1] * bg) - (x[0] - 1) / (self.fx.flUn ** 2))
-            der[1] = sum((ni / nui - 1) * x[0] * bg - (x[1] - 1) / (self.det.bgUn ** 2))
+            nui = n[0] * (sm + n[1] * bg)
+            der = zeros_like(n)
+            der[0] = sum((ni / nui - 1) * (sm + n[1] * bg) - (n[0] - 1) / (self.fx.flUn ** 2))
+            der[1] = sum((ni / nui - 1) * n[0] * bg - (n[1] - 1) / (self.det.bgUn ** 2))
             return -der
 
-        def f_hess(x):
+        def f_hess(n):
             ni = bsm + sm + bg
-            nui = x[0] * (sm + x[1] * bg)
+            nui = n[0] * (sm + n[1] * bg)
             hess = array([[0.0, 0.0], [0.0, 0.0]])
-            hess[0][0] = -sum(ni / (nui ** 2) * ((sm + x[1] * bg) ** 2) - 1 / (self.fx.flUn ** 2))
-            hess[1][1] = -sum(ni / (nui ** 2) * ((x[0] * bg) ** 2) - 1 / (self.det.bgUn ** 2))
-            hess[0][1] = -sum(ni / (nui ** 2) * x[0] * bg * (sm + x[1] * bg) + (ni / nui - 1) * bg)
-            hess[1][0] = -sum(ni / (nui ** 2) * (sm + x[1] * bg) * x[0] * bg + (ni / nui - 1) * bg)
+            hess[0][0] = -sum(ni / (nui ** 2) * ((sm + n[1] * bg) ** 2) - 1 / (self.fx.flUn ** 2))
+            hess[1][1] = -sum(ni / (nui ** 2) * ((n[0] * bg) ** 2) - 1 / (self.det.bgUn ** 2))
+            hess[0][1] = -sum(ni / (nui ** 2) * n[0] * bg * (sm + n[1] * bg) + (ni / nui - 1) * bg)
+            hess[1][0] = -sum(ni / (nui ** 2) * (sm + n[1] * bg) * n[0] * bg + (ni / nui - 1) * bg)
             return -hess
 
         res = minimize(f, array([1.0, 1.0]), method='Newton-CG', jac=f_der, hess=f_hess)
@@ -77,7 +77,7 @@ class Chisquare:
         return -res.fun
 
     def tmu_binned(self):
-        if self.th != self.det.erMin:
+        if self.th != self.det.erMin:       # 潜在的bug，可能造成死循环
             self.binned_sm = \
                 array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
                        for i in range(self.ebin.shape[0] - 1)])
@@ -184,17 +184,17 @@ def find_excl(chi, nsi, d, sigma=3):
         order = floor(log10(effg))
         g['u' + nsi] = effg + 0.5 * d * (10 ** order)
     else:
-        g['u' + nsi] = d * (10 ** -9)
+        g['u' + nsi] = d * (10 ** -10)
     # print(effg)
     # print(g['u'+nsi])
     ts = tsp = chi.tmuc(g)
     while tsp >= ts > sigma ** 2 or tsp <= ts < sigma ** 2:
         if tsp >= ts > sigma ** 2:
-            g['u' + nsi] = effg + (g['u' + nsi] - effg) / 10
+            g['u' + nsi] = effg + (g['u' + nsi] - effg) / (10 ** 0.5)
             tsp = ts
             ts = chi.tmuc(g)
         if tsp <= ts < sigma ** 2:
-            g['u' + nsi] = effg + (g['u' + nsi] - effg) * 10
+            g['u' + nsi] = effg + (g['u' + nsi] - effg) * (10 ** 0.5)
             tsp = ts
             ts = chi.tmuc(g)
     g['u' + nsi] = g['u' + nsi] if tsp >= ts else effg + (g['u' + nsi] - effg) / 10

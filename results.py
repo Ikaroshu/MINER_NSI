@@ -119,12 +119,13 @@ def tmu_sigma():
     save('outputdata/sigma.npy', sigma)
 
 
-def generate_excl(ty, f, tag):
+def generate_excl(ty, f, th, tag):
     mv = logspace(-3, -1, 5)
     p = Pool()
     uee = zeros_like(mv)
     ueed = zeros_like(mv)
     d = Detector(ty)
+    d.erMin /= (4 / th)
     fx = Flux(f)
     if tag == '0':
         epsi = [0, 0]
@@ -132,13 +133,15 @@ def generate_excl(ty, f, tag):
         epsi = [0.3, 0.3]
     if f == 'sns':
         nsi = 'mm'
+        expo = 10000
     else:
         nsi = 'ee'
+        expo = 1000
     for i in range(mv.shape[0]):
         g = couplings()
         g['u' + nsi] = epsi[0] * ((mv[i] ** 2) * 2 * sqrt(2) * gf)
         g['d' + nsi] = epsi[1] * ((mv[i] ** 2) * 2 * sqrt(2) * gf)
-        chi = Chisquare(d, fx, g, mv[i], 1000, 20)
+        chi = Chisquare(d, fx, g, mv[i], expo, 20)
         r1 = p.apply_async(find_excl, args=(chi, nsi, 1, 3,))
         r2 = p.apply_async(find_excl, args=(chi, nsi, -1, 3,))
         uee[i] = r1.get()
@@ -146,8 +149,10 @@ def generate_excl(ty, f, tag):
         print(uee[i], ueed[i])
     p.close()
     p.join()
-    save('./outputdata/' + f + 'u' + nsi + '_excl_-4_1000_linear' + tag + ty + '.npy', uee)
-    save('./outputdata/' + f + 'u' + nsi + '_excl_-4d_1000_linear' + tag + ty + '.npy', ueed)
+    save('./outputdata/' + f + 'u' + nsi + '_excl_-' + str(int(th)) + '_' + str(int(expo)) + '_linear' +
+         tag + ty + '.npy', uee)
+    save('./outputdata/' + f + 'u' + nsi + '_excl_-' + str(int(th)) + 'd_' + str(int(expo)) + '_linear' +
+         tag + ty + '.npy', ueed)
 
 
 def generate_dark():
