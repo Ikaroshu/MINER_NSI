@@ -132,7 +132,7 @@ def generate_excl(ty, f, th, tag):
     elif tag == '3':
         epsi = [0.3, 0.3]
     if f == 'sns':
-        nsi = 'mm'
+        nsi = 'ee'
         expo = 10000
     else:
         nsi = 'ee'

@@ -237,10 +237,10 @@ def plot_excl(ty, f, tag):
 def plot_combined(f, tag, th, m):
     mv = logspace(-3, -1, 5)
     if f == 'sns':
-        ueege = load('./outputdata/snsumm_excl_-' + str(int(th)) + '_10000_linear' + tag + 'Ge' + '.npy')[m]
-        ueesi = load('./outputdata/snsumm_excl_-' + str(int(th)) + '_10000_linear' + tag + 'Si' + '.npy')[m]
-        ueeged = load('./outputdata/snsumm_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'Ge' + '.npy')[m]
-        ueesid = load('./outputdata/snsumm_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'Si' + '.npy')[m]
+        ueege = load('./outputdata/snsuee_excl_-' + str(int(th)) + '_10000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesi = load('./outputdata/snsuee_excl_-' + str(int(th)) + '_10000_linear' + tag + 'ar' + '.npy')[m]
+        ueeged = load('./outputdata/snsuee_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesid = load('./outputdata/snsuee_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'ar' + '.npy')[m]
     elif f == 'reactor':
         ueege = load('./outputdata/reactoruee_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Ge' + '.npy')[m]
         ueesi = load('./outputdata/reactoruee_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Si' + '.npy')[m]
@@ -275,20 +275,20 @@ def plot_combined(f, tag, th, m):
     fig, ax = subplots()
     ax.plot(u, dge, color='red', label='ge')
     ax.plot(u, ddge, color='red')
-    ax.plot(u, dsi, color='blue', label='si')
+    ax.plot(u, dsi, color='blue', label='si' if f == 'reactor' else 'ar')
     ax.plot(u, ddsi, color='blue')
     ax.fill_between(u, s, sd, color='gray')
-    ax.set_xlim([-1.5, 1])
-    ax.set_ylim([-1, 1.5])
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
     ax.legend()
     if f == 'sns':
-        ax.set_xlabel(r"$\epsilon^u_{\mu\mu}$")
-        ax.set_ylabel(r"$\epsilon^d_{\mu\mu}$")
+        ax.set_xlabel(r"$\epsilon^u_{ee}$")
+        ax.set_ylabel(r"$\epsilon^d_{ee}$")
     elif f == 'reactor':
         ax.set_xlabel(r"$\epsilon^u_{ee}$")
         ax.set_ylabel(r"$\epsilon^d_{ee}$")
     ax.set_title(r"$m_v$ = {0:.1e} MeV, $m_{{th}}$ = {1} MeV".format(mv[m] * 1000, th * 100))
-    fig.savefig('./plots/combine_' + str(int(th)) + f + tag + str(m) + '.pdf')
+    fig.savefig('./plots/combine_' + str(int(th)) + f + 'uee' + tag + str(m) + '.pdf')
 
 
 def plot_combine_diff(tag, th, m):

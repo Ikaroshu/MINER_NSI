@@ -5,7 +5,7 @@ from constants import *
 
 
 class Detector:
-    """One can choose from Ge or Si"""
+    """One can choose from Ge, Si or Ar"""
 
     def __init__(self, ty):
         self.ty = ty
@@ -25,6 +25,15 @@ class Detector:
             self.n = 14  # array([14, 15, 16])
             # self.fraction = array([0.9223, 0.0467, 0.031])
             self.m = 26.06  # array([26.06, 26.99, 27.92])
+        elif ty.lower() == 'ar':
+            self.z = 18
+            self.n = 22
+            self.m = 37.211
+        elif ty.lower() == 'csi':
+            self.nIso = 2
+            self.z = array([55, 53])
+            self.n = array([78, 74])
+            self.fraction = array([0.5, 0.5])
         else:
             raise Exception("No such detector defined in code yet.")
 
