@@ -1,5 +1,5 @@
 from scipy.optimize import minimize
-
+from scipy.interpolate import Rbf
 from events import *
 
 
@@ -134,27 +134,28 @@ class Chisquare:
 
 
 def find_discov(chi, nsi, d, sigma=4.28):
+    m = average(chi.det.m)
     chi.g[nsi] = d * 10 ** -8
     if chi.mv > 10 ** -3:
         chi.g[nsi] *= 10 ** (floor(log10(chi.mv)) + 3)
     if chi.det.ty == 'Si' and chi.det.erMin == 1e-07:
         chi.g[nsi] /= 10
     if nsi == 'uee' or nsi == 'dee':
-        deno = 2 * sqrt(2) * gf * (2 * chi.det.m * (0.8 * (10 ** -7)) + chi.mv ** 2)
+        deno = 2 * sqrt(2) * gf * (2 * m * (0.8 * (10 ** -7)) + chi.mv ** 2)
         te = 0.5 * chi.det.z * (0.5 - 2 * ssw + 2 * chi.g['uee'] / deno + chi.g['dee'] / deno) + \
             0.5 * chi.det.n * (-0.5 + chi.g['uee'] / deno + 2 * chi.g['dee'] / deno)
         while te >= 0:
             chi.g[nsi] /= 10
-            deno = 2 * sqrt(2) * gf * (2 * chi.det.m * (0.8 * (10 ** -7)) + chi.mv ** 2)
+            deno = 2 * sqrt(2) * gf * (2 * m * (0.8 * (10 ** -7)) + chi.mv ** 2)
             te = 0.5 * chi.det.z * (0.5 - 2 * ssw + 2 * chi.g['uee'] / deno + chi.g['dee'] / deno) + \
                 0.5 * chi.det.n * (-0.5 + chi.g['uee'] / deno + 2 * chi.g['dee'] / deno)
     elif nsi == 'umm' or nsi == 'dmm':
-        deno = 2 * sqrt(2) * gf * (2 * chi.det.m * (0.8 * (10 ** -7)) + chi.mv ** 2)
+        deno = 2 * sqrt(2) * gf * (2 * m * (0.8 * (10 ** -7)) + chi.mv ** 2)
         te = 0.5 * chi.det.z * (0.5 - 2 * ssw + 2 * chi.g['umm'] / deno + chi.g['dmm'] / deno) + \
             0.5 * chi.det.n * (-0.5 + chi.g['umm'] / deno + 2 * chi.g['dmm'] / deno)
         while te >= 0:
             chi.g[nsi] /= 10
-            deno = 2 * sqrt(2) * gf * (2 * chi.det.m * (0.8 * (10 ** -7)) + chi.mv ** 2)
+            deno = 2 * sqrt(2) * gf * (2 * m * (0.8 * (10 ** -7)) + chi.mv ** 2)
             te = 0.5 * chi.det.z * (0.5 - 2 * ssw + 2 * chi.g['umm'] / deno + chi.g['dmm'] / deno) + \
                 0.5 * chi.det.n * (-0.5 + chi.g['umm'] / deno + 2 * chi.g['dmm'] / deno)
     ts = tsp = chi.tmu_binned()
@@ -213,3 +214,8 @@ def find_excl(chi, nsi, d, sigma=3):
         tsp = chi.tmuc(g)
         # print(tsp)
     return g['u' + nsi]
+
+
+def find_excl_v2(chi, nsi, d, sigma=3):
+    eu = linspace(-1, 1, 50)
+    ed = linspace(-1, 1, 50)

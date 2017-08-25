@@ -18,20 +18,21 @@ def rates(er, mv, det, fx, g):  # per nucleus
            0.5 * det.n * (g['uem'] / deno + 2 * g['dem'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['uet'] / deno + g['det'] / deno) +
            0.5 * det.n * (g['uet'] / deno + 2 * g['det'] / deno)) ** 2
-    return 2 / pi * (gf ** 2) * (2 * fx.fint(er, det.m) - det.m * er * fx.fintinvs(er, det.m)) * \
-        det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n)
+    m = average(det.m)
+    return dot(2 / pi * (gf ** 2) * (2 * fx.fint(er, m) - det.m * er * fx.fintinvs(er, m)) *
+               det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n), det.fraction)
 
 
 def totoal(expo, mv, det, fx, g):
     return quad(rates, det.erMin, det.erMax, args=(mv, det, fx, g))[0] * \
-           expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / det.m
+           expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / sum(det.m)
 
 
 def binned_events(era, erb, expo, mv, det, fx, g):
     if fx.ty == 'sns':
         return quad(snsrates, era, erb, args=(mv, det, fx, g,))[0] * \
-               expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / det.m
-    return quad(rates, era, erb, args=(mv, det, fx, g))[0] * expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / det.m
+               expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / sum(det.m)
+    return quad(rates, era, erb, args=(mv, det, fx, g))[0] * expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / sum(det.m)
 
 
 def binned_background(era, erb, det, expo):
@@ -46,8 +47,9 @@ def ratesm(er, mv, det, fx, g):
            0.5 * det.n * (g['uem'] / deno + 2 * g['dem'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['umt'] / deno + g['dmt'] / deno) +
            0.5 * det.n * (g['umt'] / deno + 2 * g['dmt'] / deno)) ** 2
-    return 2 / pi * (gf ** 2) * (2 * fx.numfint(er, det.m) - det.m * er * fx.numfinvs(er, det.m)) * \
-        det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n)
+    m = average(det.m)
+    return dot(2 / pi * (gf ** 2) * (2 * fx.numfint(er, m) - det.m * er * fx.numfinvs(er, m)) *
+               det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n), det.fraction)
 
 
 def ratesp(er, mv, det, fx, g):
@@ -58,8 +60,9 @@ def ratesp(er, mv, det, fx, g):
            0.5 * det.n * (g['uem'] / deno + 2 * g['dem'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['umt'] / deno + g['dmt'] / deno) +
            0.5 * det.n * (g['umt'] / deno + 2 * g['dmt'] / deno)) ** 2
-    return 2 / pi * (gf ** 2) * (2 * fx.nupfint(er, det.m) - det.m * er * fx.nupfinvs(er, det.m)) * \
-        det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n)
+    m = average(det.m)
+    return dot(2 / pi * (gf ** 2) * (2 * fx.nupfint(er, m) - det.m * er * fx.nupfinvs(er, m)) *
+               det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n), det.fraction)
 
 
 def snsrates(er, mv, det, fx, g):
