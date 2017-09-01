@@ -1,6 +1,7 @@
-from scipy.optimize import minimize
+from scipy.optimize import minimize, root
 from scipy.interpolate import Rbf
 from events import *
+from multiprocessing.pool import Pool
 
 
 class Chisquare:
@@ -43,8 +44,10 @@ class Chisquare:
     def lgl(self, nf, nb, mu, bsm, sm, bg):
         nui = nf * (mu * bsm + sm + nb * bg)
         ni = bsm + sm + bg
-        return sum(ni * log(nui) - nui - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2)) - ((nb - 1) ** 2) / (
-            2 * (self.det.bgUn ** 2)))  # n! is constant
+        res = sum(ni * log(nui) - nui) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2)) - ((nb - 1) ** 2) / (
+            2 * (self.det.bgUn ** 2))  # n! is constant
+        # print(res)
+        return res
 
     def findl0(self, bsm, sm, bg):
         def f(n):
@@ -54,25 +57,27 @@ class Chisquare:
             ni = bsm + sm + bg
             nui = n[0] * (sm + n[1] * bg)
             der = zeros_like(n)
-            der[0] = sum((ni / nui - 1) * (sm + n[1] * bg) - (n[0] - 1) / (self.fx.flUn ** 2))
-            der[1] = sum((ni / nui - 1) * n[0] * bg - (n[1] - 1) / (self.det.bgUn ** 2))
+            der[0] = sum((ni / nui - 1) * (sm + n[1] * bg)) - (n[0] - 1) / (self.fx.flUn ** 2)
+            der[1] = sum((ni / nui - 1) * n[0] * bg) - (n[1] - 1) / (self.det.bgUn ** 2)
             return -der
 
         def f_hess(n):
             ni = bsm + sm + bg
             nui = n[0] * (sm + n[1] * bg)
             hess = array([[0.0, 0.0], [0.0, 0.0]])
-            hess[0][0] = -sum(ni / (nui ** 2) * ((sm + n[1] * bg) ** 2) - 1 / (self.fx.flUn ** 2))
-            hess[1][1] = -sum(ni / (nui ** 2) * ((n[0] * bg) ** 2) - 1 / (self.det.bgUn ** 2))
+            hess[0][0] = -sum(ni / (nui ** 2) * ((sm + n[1] * bg) ** 2)) - 1 / (self.fx.flUn ** 2)
+            hess[1][1] = -sum(ni / (nui ** 2) * ((n[0] * bg) ** 2)) - 1 / (self.det.bgUn ** 2)
             hess[0][1] = -sum(ni / (nui ** 2) * n[0] * bg * (sm + n[1] * bg) + (ni / nui - 1) * bg)
             hess[1][0] = -sum(ni / (nui ** 2) * (sm + n[1] * bg) * n[0] * bg + (ni / nui - 1) * bg)
             return -hess
 
-        res = minimize(f, array([1.0, 1.0]), method='Newton-CG', jac=f_der, hess=f_hess)
+        res = minimize(f, array([1.0, 1.0]), method='SLSQP', jac=f_der, bounds=((1e-10, None), (0, None)))
+        # res = root(f_der, [1, 1], jac=f_hess, method='hybr')
         if not res.success:
             print(self.g, self.ebin.shape[0], self.mv, self.det.ty)
             print(res.message)
             raise Exception("optimization failed!")
+        # print('nf,nb', res.x)
         # print(res.x)
         return -res.fun
 
@@ -216,6 +221,109 @@ def find_excl(chi, nsi, d, sigma=3):
     return g['u' + nsi]
 
 
-def find_excl_v2(chi, nsi, d, sigma=3):
+def tmuc(chi, g):
+    return chi.tmuc(g)
+
+
+def find_excl_v2(chi, nsi, sigma=3):
     eu = linspace(-1, 1, 50)
     ed = linspace(-1, 1, 50)
+    eeu, eed = meshgrid(eu, ed)
+    cr = zeros_like(eeu)
+    g = couplings()
+    p = Pool()
+    for i in range(50):
+        for j in range(50):
+            g['u' + nsi] = eeu[i][j] * (chi.mv ** 2) * 2 * sqrt(2) * gf
+            g['d' + nsi] = eed[i][j] * (chi.mv ** 2) * 2 * sqrt(2) * gf
+            r = p.apply_async(tmuc, args=(chi, g))
+            cr[i][j] = r.get()
+            print(cr[i][j])
+    p.close()
+    p.join()
+    savez('./outputdata/' + chi.det.ty + chi.fx.ty + '.npz', eu, ed, cr)
+
+
+def find_excl_v3(chi, nsi, sigma=3):
+    eu = linspace(-1, 1, 50)
+    ed = linspace(-2, 2, 100)
+    edl = full_like(eu, 1e10)
+    edh = full_like(eu, 1e10)
+    edl2 = full_like(eu, 1e10)
+    edh2 = full_like(eu, 1e10)
+    g = couplings()
+    p = Pool()
+    for i in range(50):
+        vv = 1e10
+        fl = 0
+        for j in range(100):
+            g['u' + nsi] = eu[i] * (chi.mv ** 2) * 2 * sqrt(2) * gf
+            g['d' + nsi] = ed[j] * (chi.mv ** 2) * 2 * sqrt(2) * gf
+            r = p.apply_async(tmuc, args=(chi, g))
+            v = r.get()
+            if vv > sigma ** 2 >= v:
+                if j == 0:
+                    vv = v
+                    continue
+                else:
+                    l = ed[j-1]
+                    h = ed[j]
+                    g['d' + nsi] = (h + l) / 2 * (chi.mv ** 2) * 2 * sqrt(2) * gf
+                    r = p.apply_async(tmuc, args=(chi, g))
+                    mid = r.get()
+                    while abs(mid - sigma ** 2) > 0.1:
+                        if mid > sigma ** 2:
+                            l = (h + l) / 2
+                            g['d' + nsi] = (h + l) / 2 * (chi.mv ** 2) * 2 * sqrt(2) * gf
+                            r = p.apply_async(tmuc, args=(chi, g))
+                            mid = r.get()
+                        else:
+                            h = (h + l) / 2
+                            g['d' + nsi] = (h + l) / 2 * (chi.mv ** 2) * 2 * sqrt(2) * gf
+                            r = p.apply_async(tmuc, args=(chi, g))
+                            mid = r.get()
+                    vv = v
+                    if fl == 0:
+                        edl[i] = (h + l) / 2
+                        print(eu[i], edl[i])
+                    else:
+                        edl2[i] = (h + l) / 2
+                        print(eu[i], edl2[i])
+            elif vv < sigma ** 2 <= v:
+                if j == 100:
+                    continue
+                else:
+                    l = ed[j - 1]
+                    h = ed[j]
+                    g['d' + nsi] = (h + l) / 2 * (chi.mv ** 2) * 2 * sqrt(2) * gf
+                    r = p.apply_async(tmuc, args=(chi, g))
+                    mid = r.get()
+                    while abs(mid - sigma ** 2) > 0.1:
+                        if mid > sigma ** 2:
+                            h = (h + l) / 2
+                            g['d' + nsi] = (h + l) / 2 * (chi.mv ** 2) * 2 * sqrt(2) * gf
+                            r = p.apply_async(tmuc, args=(chi, g))
+                            mid = r.get()
+                        else:
+                            l = (h + l) / 2
+                            g['d' + nsi] = (h + l) / 2 * (chi.mv ** 2) * 2 * sqrt(2) * gf
+                            r = p.apply_async(tmuc, args=(chi, g))
+                            mid = r.get()
+                    vv = v
+                    if fl == 0:
+                        edh[i] = (h + l) / 2
+                        print(eu[i], edh[i])
+                        fl = 1
+                    else:
+                        edh2[i] = (h + l) / 2
+                        print(eu[i], edh2[i])
+            else:
+                vv = v
+    p.close()
+    p.join()
+    savez('./outputdata/' + chi.det.ty + chi.fx.ty + nsi + '10000expo.npz', eu, edl, edh, edl2, edh2)
+
+# todo: use findroot to find answer.
+# todo: 1 ton argon 20 (10) kev above
+# todo: x^2_solar+x^2_detector
+# todo: no background

@@ -275,11 +275,14 @@ def plot_combined(f, tag, th, m):
     fig, ax = subplots()
     ax.plot(u, dge, color='red', label='ge')
     ax.plot(u, ddge, color='red')
+    ax.fill_between(u, dge, ddge, color='red', alpha=0.5)
     ax.plot(u, dsi, color='blue', label='si' if f == 'reactor' else 'ar')
     ax.plot(u, ddsi, color='blue')
+    ax.fill_between(u, dsi, ddsi, color='blue', alpha=0.5)
     ax.fill_between(u, s, sd, color='gray')
-    ax.set_xlim([-1, 1])
-    ax.set_ylim([-1, 1])
+    ax.set_xlim([-0.1, 0.1])
+    ax.set_ylim([-0.1, 0.1])
+    ax.set_aspect('equal')
     ax.legend()
     if f == 'sns':
         ax.set_xlabel(r"$\epsilon^u_{ee}$")
@@ -287,8 +290,8 @@ def plot_combined(f, tag, th, m):
     elif f == 'reactor':
         ax.set_xlabel(r"$\epsilon^u_{ee}$")
         ax.set_ylabel(r"$\epsilon^d_{ee}$")
-    ax.set_title(r"$m_v$ = {0:.1e} MeV, $m_{{th}}$ = {1} MeV".format(mv[m] * 1000, th * 100))
-    fig.savefig('./plots/combine_' + str(int(th)) + f + 'uee' + tag + str(m) + '.pdf')
+    ax.set_title(r"$m_v$ = 100 MeV")
+    fig.savefig('./combine_' + str(int(th)) + f + 'uee' + tag + str(m) + '.pdf')
 
 
 def plot_combine_diff(tag, th, m):
