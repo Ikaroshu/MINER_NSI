@@ -130,16 +130,16 @@ class Detector:
             self.bgUn = 0.05
         if ty.lower() == 'ge':
             self.nIso = 5
-            self.z = 32
-            self.n = 42
-            self.fraction = 1
-            self.m = 68.85
+            self.z = array([32, 32, 32, 32, 32])
+            self.n = array([38, 40, 41, 42, 44])
+            self.fraction = array([0.2123, 0.2766, 0.0773, 0.3594, 0.0744])
+            self.m = array([65.13, 66.99, 67.92, 68.85, 70.72])
         elif ty.lower() == 'si':
             self.nIso = 3
-            self.z = 14
-            self.n = 14
-            self.fraction = 1
-            self.m = 26.06
+            self.z = array([14, 14, 14])
+            self.n = array([14, 15, 16])
+            self.fraction = array([0.9223, 0.0467, 0.031])
+            self.m = array([26.06, 26.99, 27.92])
         elif ty.lower() == 'ar':
             self.nIso = 1
             self.z = 18
@@ -153,6 +153,7 @@ class Detector:
             self.fraction = array([0.5, 0.5])
             self.m = array([123.8, 118.21])
         elif ty.lower() == 'xe':
+            self.nIso = 7
             self.z = array([54])
             self.n = array([78])
             self.m = array([122.3])

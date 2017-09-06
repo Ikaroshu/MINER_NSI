@@ -1,4 +1,4 @@
-from matplotlib.pyplot import subplots, get_cmap
+from matplotlib.pyplot import subplots, get_cmap, legend
 from chisquares import *
 
 
@@ -355,3 +355,54 @@ def plot_combine_diff(tag, th, m):
     ax.set_xlabel(r"$\epsilon^{u}_{ee}-\epsilon^{u}_{\mu\mu}$")
     ax.set_ylabel(r"$\epsilon^{d}_{ee}-\epsilon^{d}_{\mu\mu}$")
     fig.savefig("./test.pdf")
+
+
+def plot_excl_v2(f, nsi='ee'):
+    blist = [100, 1, 1e-2]
+    elist = [5000, 10000, 100000, 300000]
+    fig, axes = subplots(3, 4, sharex='col', sharey='row', figsize=(12, 9))
+    if f == 'reactor':
+        nsi = 'ee'
+        d1 = 'si'
+        d2 = 'ge'
+    elif f == 'sns':
+        d1 = 'csi'
+        d2 = 'ar'
+    else:
+        raise Exception("no such flux data yet!")
+    for i in range(3):
+        for j in range(4):
+            f2 = load("./outputdata/" + d2 + f + nsi + str(int(elist[j])) + 'expo' + str(int(blist[i])) + ".npz")
+            if f == 'sns':
+                f1 = load("./outputdata/" + d1 + f + nsi + '4466' + 'expo' + '0' + ".npz")
+            else:
+                f1 = load("./outputdata/" + d1 + f + nsi + str(int(elist[j])) + 'expo' + str(int(blist[i])) + ".npz")
+            eu = f1['arr_0']
+            e1dl = f1['arr_1']
+            e1dh = f1['arr_2']
+            e1dl2 = f1['arr_3']
+            e1dh2 = f1['arr_4']
+            e2dl = f2['arr_1']
+            e2dh = f2['arr_2']
+            e2dl2 = f2['arr_3']
+            e2dh2 = f2['arr_4']
+            axes[i][j].fill_between(eu, e1dl, e1dh, color='blue', alpha=0.5)
+            axes[i][j].fill_between(eu, e1dl2, e1dh2, color='blue', alpha=0.5)
+            axes[i][j].fill_between(eu, e2dl, e2dh, color='red', alpha=0.5)
+            axes[i][j].fill_between(eu, e2dl2, e2dh2, color='red', alpha=0.5)
+            axes[i][j].plot(eu, e1dl, color='blue', alpha=0.5, label=d1)
+            axes[i][j].plot(eu, e2dl, color='red', alpha=0.5, label=d2)
+            # axes[i][j].legend()
+            axes[i][j].set_xlim([-1, 1])
+            axes[i][j].set_ylim([-1, 1])
+            axes[i][j].yaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
+            axes[i][j].xaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
+    for i in range(3):
+        axes[i][0].set_ylabel("background: {} dru".format(blist[i]))
+    for j in range(4):
+        axes[2][j].set_xlabel("exposure: {} kg*days".format(elist[j]))
+    axes[0][3].legend(loc='upper right')
+    # fig.text(0.5, 0.04, r"$\epsilon_{ee}^{u}$", ha='center')
+    # fig.text(0.04, 0.5, r"$\epsilon_{ee}^{d}$", va='center', rotation='vertical')
+    fig.tight_layout()
+    fig.savefig('./' + f + nsi + '.pdf')
