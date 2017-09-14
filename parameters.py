@@ -361,4 +361,6 @@ class Flux:
 
 def couplings():
     return {'uee': 0, 'umm': 0, 'utt': 0, 'uem': 0, 'uet': 0, 'umt': 0,
-            'dee': 0, 'dmm': 0, 'dtt': 0, 'dem': 0, 'det': 0, 'dmt': 0}
+            'dee': 0, 'dmm': 0, 'dtt': 0, 'dem': 0, 'det': 0, 'dmt': 0,
+            'elee': 0, 'elmm': 0, 'eltt': 0, 'elem': 0, 'elet': 0, 'elmt': 0,
+            'eree': 0, 'ermm': 0, 'ertt': 0, 'erem': 0, 'eret': 0, 'ermt': 0}

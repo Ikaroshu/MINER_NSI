@@ -81,7 +81,7 @@ class Chisquare:
         res = minimize(f, array([1.0, 1.0]), method='SLSQP', jac=f_der, bounds=((1e-10, None), (0, None)))
         # res = root(f_der, [1, 1], jac=f_hess, method='hybr')
         if not res.success:
-            print(self.g, self.ebin.shape[0], self.mv, self.det.ty)
+            # print(self.g, self.ebin.shape[0], self.mv, self.det.ty)
             print(res.message)
             raise Exception("optimization failed!")
         # print('nf,nb', res.x)
@@ -122,6 +122,25 @@ class Chisquare:
         lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
         lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
         return -2 * scale * (lgl0 - lglmu)
+
+    def l0(self, coup):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        scale = 1
+        if self.expo >= 1000:
+            scale = self.expo / 1000
+        lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        return scale * lgl0
 
         # def tmu_1bin_analytic(self):
         #     if self.th != self.det.erMin:
@@ -255,8 +274,11 @@ def find_excl_v2(chi, nsi, sigma=3):
 
 
 def find_excl_v3(chi, nsi, sigma=3):
+    poi = 200
+    if chi.det.background < 1 or chi.expo > 10000:
+        poi = 400
     eu = linspace(-1, 1, 50)
-    ed = linspace(-2, 2, 200)
+    ed = linspace(-2, 2, poi)
     edl = full_like(eu, 1e10)
     edh = full_like(eu, 1e10)
     edl2 = full_like(eu, 1e10)
@@ -266,7 +288,7 @@ def find_excl_v3(chi, nsi, sigma=3):
     for i in range(50):
         vv = 1e10
         fl = 0
-        for j in range(200):
+        for j in range(poi):
             g['u' + nsi] = eu[i] * (chi.mv ** 2) * 2 * sqrt(2) * gf
             g['d' + nsi] = ed[j] * (chi.mv ** 2) * 2 * sqrt(2) * gf
             r = p.apply_async(tmuc, args=(chi, g))
@@ -300,7 +322,7 @@ def find_excl_v3(chi, nsi, sigma=3):
                         edl2[i] = (h + l) / 2
                         print(eu[i], edl2[i])
             elif vv < sigma ** 2 <= v:
-                if j == 200:
+                if j == poi:
                     continue
                 else:
                     l = ed[j - 1]
@@ -331,13 +353,9 @@ def find_excl_v3(chi, nsi, sigma=3):
                 vv = v
     p.close()
     p.join()
-    savez('./outputdata/' + chi.det.ty + chi.fx.ty + nsi + str(int(chi.expo)) + 'expo' + str(int(chi.det.background)) +
+    savez('./outputdata/' + chi.det.ty + chi.fx.ty + nsi + str(int(chi.expo)) + 'expo' + str(chi.det.background) +
           '.npz', eu, edl, edh, edl2, edh2)
 
 
 # todo: x^2_solar+x^2_detector
 # todo: ee vs mumu, 6 dimension
-# todo: go background free for sns
-# todo: 10 and 1 dru for reactor
-# todo: 5000 kg*days and 50000 kg*days also for csi
-# todo: compare with larger scaling

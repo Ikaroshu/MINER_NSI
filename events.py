@@ -122,3 +122,46 @@ def snsrates(er, mv, det, fx, g):
         return (rates(er, mv, det, fx, g) + ratesm(er, mv, det, fx, g) + ratesp(er, mv, det, fx, g)) * \
            0.331 * (1 + erf(0.248 * (er * 1e6 - 9.22)))
     return rates(er, mv, det, fx, g) + ratesm(er, mv, det, fx, g) + ratesp(er, mv, det, fx, g)
+
+
+def rates_e(er, mv, det, fx, g):
+    deno = 2 * sqrt(2) * gf * (2 * det.m * er + mv ** 2)
+    m = dot(det.m, det.fraction)
+    epls = (1 + (-0.5 + ssw) + g['elee'] / deno) ** 2 + (g['elem'] / deno) ** 2 + (g['elet'] / deno) ** 2
+    eprs = (ssw + g['eree'] / deno) ** 2 + (g['erem'] / deno) ** 2 + (g['eret'] / deno) ** 2
+    eplr = (1 + (-0.5 + ssw) + g['elee'] / deno) * (ssw + g['eree'] / deno) + (g['elem'] / deno) * (g['erem'] / deno) +\
+           (g['elet'] / deno) * (g['eret'] / deno)
+    return dot(2 / pi * (gf ** 2) * det.m *
+               (epls + eprs * (fx.fint(er, m) - 2 * er * fx.fintinv(er, m) + er ** 2 * fx.fintins(er, m)) -
+                eplr * det.m * er * fx.fintinvs(er, m)), det.fraction)
+    # todo: electron scattering 要求eL和eR
+
+
+def ratesp_e(er, mv, det, fx, g):
+    deno = 2 * sqrt(2) * gf * (2 * det.m * er + mv ** 2)
+    m = dot(det.m, det.fraction)
+    epls = (1 + (-0.5 + ssw) + g['elee'] / deno) ** 2 + (g['elem'] / deno) ** 2 + (g['elet'] / deno) ** 2
+    eprs = (ssw + g['eree'] / deno) ** 2 + (g['erem'] / deno) ** 2 + (g['eret'] / deno) ** 2
+    eplr = (1 + (-0.5 + ssw) + g['elee'] / deno) * (ssw + g['eree'] / deno) + (g['elem'] / deno) * (g['erem'] / deno) +\
+           (g['elet'] / deno) * (g['eret'] / deno)
+    return dot(2 / pi * (gf ** 2) * det.m *
+               (epls + eprs * (fx.nupfint(er, m) - 2 * er * fx.nupfinv(er, m) + er ** 2 * fx.nupfinv(er, m)) -
+                eplr * det.m * er * fx.nupfinvs(er, m)), det.fraction)
+
+
+def ratesm_e(er, mv, det, fx, g):
+    deno = 2 * sqrt(2) * gf * (2 * det.m * er + mv ** 2)
+    m = dot(det.m, det.fraction)
+    epls = (1 + (-0.5 + ssw) + g['elee'] / deno) ** 2 + (g['elem'] / deno) ** 2 + (g['elet'] / deno) ** 2
+    eprs = (ssw + g['eree'] / deno) ** 2 + (g['erem'] / deno) ** 2 + (g['eret'] / deno) ** 2
+    eplr = (1 + (-0.5 + ssw) + g['elee'] / deno) * (ssw + g['eree'] / deno) + (g['elem'] / deno) * (g['erem'] / deno) +\
+           (g['elet'] / deno) * (g['eret'] / deno)
+    return dot(2 / pi * (gf ** 2) * det.m *
+               (epls + eprs * (fx.numfint(er, m) - 2 * er * fx.numfinv(er, m) + er ** 2 * fx.numfinv(er, m)) -
+                eplr * det.m * er * fx.numfinvs(er, m)), det.fraction)
+
+
+def binned_events_e(era, erb, expo, mv, det, fx, g):
+    if fx.ty != 'sns':
+        raise Exception('not supported!')
+    # todo:需不需要efficiency curve，对于电离能量的对比

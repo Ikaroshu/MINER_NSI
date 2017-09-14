@@ -406,3 +406,58 @@ def plot_excl_v2(f, nsi='ee'):
     # fig.text(0.04, 0.5, r"$\epsilon_{ee}^{d}$", va='center', rotation='vertical')
     fig.tight_layout()
     fig.savefig('./' + f + nsi + '.pdf')
+
+
+def plot_excl_v3(f, nsi='ee'):
+    if f == 'reactor':
+        bgl = [10, 1]
+        exl = [5000, 50000]
+        nsi = 'ee'
+        d1 = 'si'
+        d2 = 'ge'
+    elif f == 'sns':
+        bgl = [5e-3, 0]
+        exl = [5000, 50000]
+        d1 = 'csi'
+        d2 = 'ar'
+    else:
+        raise Exception('no such flux')
+    for b in bgl:
+        for ex in exl:
+            f1 = load('./outputdata/' + d1 + f + nsi + str(int(ex)) + 'expo' + str(b) + '.npz')
+            f2 = load('./outputdata/' + d2 + f + nsi + str(int(ex)) + 'expo' + str(b) + '.npz')
+            eu = f1['arr_0']
+            e1dl = f1['arr_1']
+            e1dh = f1['arr_2']
+            e1dl2 = f1['arr_3']
+            e1dh2 = f1['arr_4']
+            e2dl = f2['arr_1']
+            e2dh = f2['arr_2']
+            e2dl2 = f2['arr_3']
+            e2dh2 = f2['arr_4']
+            edl1 = zeros_like(eu)
+            edh1 = zeros_like(eu)
+            edl2 = zeros_like(eu)
+            edh2 = zeros_like(eu)
+            for i in range(eu.shape[0]):
+                edl1[i] = e1dl[i] if e1dl[i] > e2dl[i] else e2dl[i]
+                edh1[i] = e1dh[i] if e1dh[i] < e2dh[i] else e2dh[i]
+                edl2[i] = e1dl2[i] if e1dl2[i] > e2dl2[i] else e2dl2[i]
+                edh2[i] = e1dh2[i] if e1dh2[i] < e2dh2[i] else e2dh2[i]
+            fig, ax = subplots()
+            ax.fill_between(eu, e1dl, e1dh, color='blue', alpha=0.2, label=d1)
+            ax.fill_between(eu, e1dl2, e1dh2, color='blue', alpha=0.2)
+            ax.fill_between(eu, e2dl, e2dh, color='red', alpha=0.2, label=d2)
+            ax.fill_between(eu, e2dl2, e2dh2, color='red', alpha=0.2)
+            ax.fill_between(eu, edl1, edh1, where=edh1 >= edl1, color='gray', alpha=0.8)
+            ax.fill_between(eu, edl2, edh2, where=edh2 >= edl2, color='gray', alpha=0.8 , label='combined')
+            # ax.plot(eu, e1dl, c  lor='red', alpha=0, label=d2)
+            ax.set_xlim([-1, 1])
+            ax.set_ylim([-1, 1])
+            ax.yaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
+            ax.xaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
+            ax.legend()
+            ax.set_xlabel("$\epsilon_{ee}^u$" if nsi == 'ee' else "$\epsilon_{\mu\mu}^u$")
+            ax.set_ylabel("$\epsilon_{ee}^d$" if nsi == 'ee' else "$\epsilon_{\mu\mu}^d$")
+            fig.tight_layout()
+            fig.savefig('./' + f + nsi + str(int(ex)) + 'expo' + str(b) + '.pdf')
