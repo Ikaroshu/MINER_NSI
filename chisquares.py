@@ -30,6 +30,9 @@ class Chisquare:
         self.binned_nsi = \
             array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, self.g)
                    for i in range(self.ebin.shape[0] - 1)])
+        self.binned_nsi_e = \
+            array([binned_events_e(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, self.g)
+                   for i in range(self.ebin.shape[0] - 1)])
 
     # def tmus(self):
     #     if self.th != self.det.erMin:
@@ -134,6 +137,25 @@ class Chisquare:
         sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
                     for i in range(self.ebin.shape[0] - 1)])
         bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        scale = 1
+        if self.expo >= 1000:
+            scale = self.expo / 1000
+        lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        return scale * lgl0
+
+    def le0(self, coup):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        sm = array([binned_events_e(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi_e - sm
         # print('bnsi', self.binned_nsi)
         scale = 1
         if self.expo >= 1000:
