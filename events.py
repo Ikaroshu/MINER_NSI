@@ -50,25 +50,40 @@ def formfsquared(er, a):
     s = 0.5 * (10 ** -15) / (MeterByJoule * GeVPerJoule)
     r0 = sqrt(r ** 2 - 5 * (s ** 2))
     return (3 * spherical_jn(1, er * r0) / (er * r0) * exp((-(er * s) ** 2) / 2)) ** 2
+    # er = er * 1e6
+    # t=9.05322e6 * exp(-1.9394e-5 * a * er ) * (-0.00692 * sqrt(2.17706 + pow(-0.6 + 1.23 * pow(a,0.3333),2)) * sqrt(a * er) * cos(0.00692 * sqrt(2.17706 + pow(-0.6 + 1.23 * pow(a,0.3333),2)) * sqrt(a * er)) + sin( 0.00692 * sqrt(2.17706 + pow(-0.6 + 1.23 * pow(a,0.3333),2)) * sqrt(a * er) )) / ( pow( 2.17706 + pow(-0.6 + 1.23 * pow(a,0.3333),2),1.5) * pow(a * er,1.5))
+    # return t ** 2
 
+def f2(er, a):
+    r = 1.2 * (10 ** -15) * (a ** (1 / 3)) / (MeterByJoule * GeVPerJoule)
+    s = 0.5 * (10 ** -15) / (MeterByJoule * GeVPerJoule)
+    r0 = sqrt(r ** 2 - 5 * (s ** 2))
+    return (3 * spherical_jn(1, er * r0) / (er * r0) * exp((-(er * s) ** 2) / 2)) ** 2
 
 def rates(er, mv, det, fx, g):  # per nucleus
     deno = 2 * sqrt(2) * gf * (2 * det.m * er + mv ** 2)
-    qvs = (0.5 * det.z * (0.5 - 2 * ssw + 2 * g['uee'] / deno + g['dee'] / deno) +
-           0.5 * det.n * (-0.5 + g['uee'] / deno + 2 * g['dee'] / deno)) ** 2 + \
+    qvs = (0.5 * det.z * (rho*(0.5-2*knu*ssw)+2*lul+2*lur+ldl+ldr + 2 * g['uee'] / deno + g['dee'] / deno) +
+           0.5 * det.n * (-0.5*rho+lul+lur+2*ldl+2*ldr + g['uee'] / deno + 2 * g['dee'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['uem'] / deno + g['dem'] / deno) +
            0.5 * det.n * (g['uem'] / deno + 2 * g['dem'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['uet'] / deno + g['det'] / deno) +
            0.5 * det.n * (g['uet'] / deno + 2 * g['det'] / deno)) ** 2
-    m = dot(det.m, det.fraction)
+    if fx.ty == 'sns':
+        m = det.m
+    else:
+        m = dot(det.m, det.fraction)
     if fx.ty == 'solar':
         epsi = Epsilon()
         epsi.epu['ee'] = g['uee'] * (mv ** 2) * 2 * sqrt(2) * gf
         epsi.epu['mm'] = g['umm'] * (mv ** 2) * 2 * sqrt(2) * gf
         epsi.epd['ee'] = g['dee'] * (mv ** 2) * 2 * sqrt(2) * gf
         epsi.epd['mm'] = g['dmm'] * (mv ** 2) * 2 * sqrt(2) * gf
-    return dot(2 / pi * (gf ** 2) * (2 * fx.fint(er, m) - det.m * er * fx.fintinvs(er, m)) *
-               det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n), det.fraction)
+    if fx.ty == 'snst':
+        q = er
+    else:
+        q = sqrt(2 * det.m * er)
+    return dot(2 / pi * (gf ** 2) * (2 * fx.fint(er, m) - 2 * er * fx.fintinv(er, m) + er * er *fx.fintinvs(er, m) - det.m * er * fx.fintinvs(er, m)) *
+               det.m * qvs * formfsquared(q, det.z + det.n), det.fraction)
 
 
 def totoal(expo, mv, det, fx, g):
@@ -93,28 +108,42 @@ def binned_background(era, erb, det, expo):
 
 def ratesm(er, mv, det, fx, g):
     deno = 2 * sqrt(2) * gf * (2 * det.m * er + mv ** 2)
-    qvs = (0.5 * det.z * (0.5 - 2 * ssw + 2 * g['umm'] / deno + g['dmm'] / deno) +
-           0.5 * det.n * (-0.5 + g['umm'] / deno + 2 * g['dmm'] / deno)) ** 2 + \
+    qvs = (0.5 * det.z * (rho*(0.5-2*knu*ssw)+2*lul+2*lur+ldl+ldr + 2 * g['umm'] / deno + g['dmm'] / deno) +
+           0.5 * det.n * (-0.5*rho+lul+lur+2*ldl+2*ldr + g['umm'] / deno + 2 * g['dmm'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['uem'] / deno + g['dem'] / deno) +
            0.5 * det.n * (g['uem'] / deno + 2 * g['dem'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['umt'] / deno + g['dmt'] / deno) +
            0.5 * det.n * (g['umt'] / deno + 2 * g['dmt'] / deno)) ** 2
-    m = dot(det.m, det.fraction)
-    return dot(2 / pi * (gf ** 2) * (2 * fx.numfint(er, m) - det.m * er * fx.numfinvs(er, m)) *
-               det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n), det.fraction)
+    if fx.ty == 'sns':
+        m = det.m
+    else:
+        m = dot(det.m, det.fraction)
+    if fx.ty == 'snst':
+        q = er
+    else:
+        q = sqrt(2 * det.m * er)
+    return dot(2 / pi * (gf ** 2) * (2 * fx.numfint(er, m)- 2*er*fx.numfinv(er,m)+er*er*fx.numfinvs(er, m) - det.m * er * fx.numfinvs(er, m)) *
+               det.m * qvs * formfsquared(q, det.z + det.n), det.fraction)
 
 
 def ratesp(er, mv, det, fx, g):
     deno = 2 * sqrt(2) * gf * (2 * det.m * er + mv ** 2)
-    qvs = (0.5 * det.z * (0.5 - 2 * ssw + 2 * g['umm'] / deno + g['dmm'] / deno) +
-           0.5 * det.n * (-0.5 + g['umm'] / deno + 2 * g['dmm'] / deno)) ** 2 + \
+    qvs = (0.5 * det.z * (rho*(0.5-2*knu*ssw)+2*lul+2*lur+ldl+ldr + 2 * g['umm'] / deno + g['dmm'] / deno) +
+           0.5 * det.n * (-0.5*rho+lul+lur+2*ldl+2*ldr + g['umm'] / deno + 2 * g['dmm'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['uem'] / deno + g['dem'] / deno) +
            0.5 * det.n * (g['uem'] / deno + 2 * g['dem'] / deno)) ** 2 + \
           (0.5 * det.z * (2 * g['umt'] / deno + g['dmt'] / deno) +
            0.5 * det.n * (g['umt'] / deno + 2 * g['dmt'] / deno)) ** 2
-    m = dot(det.m, det.fraction)
-    return dot(2 / pi * (gf ** 2) * (2 * fx.nupfint(er, m) - det.m * er * fx.nupfinvs(er, m)) *
-               det.m * qvs * formfsquared(sqrt(2 * det.m * er), det.z + det.n), det.fraction)
+    if fx.ty == 'sns':
+        m = det.m
+    else:
+        m = dot(det.m, det.fraction)
+    if fx.ty == 'snst':
+        q = er
+    else:
+        q = sqrt(2 * det.m * er)
+    return dot(2 / pi * (gf ** 2) * (2 * fx.nupfint(er, m)- 2*er*fx.nupfinv(er,m)+er*er*fx.nupfinvs(er, m) - det.m * er * fx.nupfinvs(er, m)) *
+               det.m * qvs * formfsquared(q, det.z + det.n), det.fraction)
 
 
 def snsrates(er, mv, det, fx, g):

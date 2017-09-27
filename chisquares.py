@@ -134,8 +134,11 @@ class Chisquare:
             self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
                                     for i in range(self.ebin.shape[0] - 1)])
             self.th = self.det.erMin
-        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
-                    for i in range(self.ebin.shape[0] - 1)])
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            sm = array([134])
+        else:
+            sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                        for i in range(self.ebin.shape[0] - 1)])
         bsm = self.binned_nsi - sm
         # print('bnsi', self.binned_nsi)
         scale = 1

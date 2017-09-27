@@ -119,45 +119,62 @@ class Detector:
 
     def __init__(self, ty):
         self.ty = ty
-        self.erMin = 10 * (10 ** -6)
-        self.erMax = 100 * (10 ** -6)  # GeV
-        self.background = 1  # dru
-        self.bgUn = 0.1
-        if ty.lower() == 'csi':
-            self.erMax = 25.6 * (10 ** -6)
-            self.erMin = 4.25 * (10 ** -6)
-            self.background = 5e-3
-            self.bgUn = 0.05
         if ty.lower() == 'ge':
             self.nIso = 5
             self.z = array([32, 32, 32, 32, 32])
             self.n = array([38, 40, 41, 42, 44])
             self.fraction = array([0.2123, 0.2766, 0.0773, 0.3594, 0.0744])
             self.m = array([65.13, 66.99, 67.92, 68.85, 70.72])
+            self.erMin = 100 * (10 ** -9)
+            self.erMax = 10 * (10 ** -6)
+            self.background = 1
+            self.bgUn = 0.1
         elif ty.lower() == 'si':
             self.nIso = 3
             self.z = array([14, 14, 14])
             self.n = array([14, 15, 16])
             self.fraction = array([0.9223, 0.0467, 0.031])
             self.m = array([26.06, 26.99, 27.92])
+            self.erMin = 100 * (10 ** -9)
+            self.erMax = 20 * (10 ** -6)
+            self.background = 1
+            self.bgUn = 0.1
         elif ty.lower() == 'ar':
             self.nIso = 1
-            self.z = 18
-            self.n = 22
-            self.m = 37.211
-            self.fraction = 1
+            self.z = array([18])
+            self.n = array([22])
+            self.m = array([37.211])
+            self.fraction = array([1])
+            self.erMin = 30 * (10 ** -6)
+            self.erMax = 1e-4
+            self.background = 5e-3
+            self.bgUn = 0.1
         elif ty.lower() == 'csi':
             self.nIso = 2
             self.z = array([55, 53])
             self.n = array([78, 74])
             self.fraction = array([0.5, 0.5])
             self.m = array([123.8, 118.21])
+            self.erMin = 4.25 * (10 ** -6)
+            self.erMax = 26 * (10 ** -6)
+            self.background = 5e-3
+            self.bgUn = 0.1
         elif ty.lower() == 'xe':
             self.nIso = 7
             self.z = array([54])
             self.n = array([78])
             self.m = array([122.3])
             self.fraction = array([1.0])
+        elif ty.lower() == "nai":
+            self.nIso = 2
+            self.z = array([11, 53])
+            self.n = array([12, 74])
+            self.fraction = array([0.5, 0.5])
+            self.m = array([21.42, 118.21])
+            self.erMin = 2 * (10 ** -6)
+            self.erMax = 4e-5
+            self.background = 5e-3
+            self.bgUn = 0.1
         else:
             raise Exception("No such detector defined in code yet.")
 
@@ -287,7 +304,7 @@ class Flux:
         # return quad(finvs, emin, self.evMax, limit=2 * p.shape[0], points=p)[0]
         if self.ty == 'solar':
             res = 0
-            res += quad(finvs, emin, self.evmax)[0]
+            res += quad(finvs, emin, self.evMax)[0]
             res += 1.44e8 * ((100 * GeVPerJoule * MeterByJoule) ** 2) / (1.439e-3 ** 2) * \
                    survp(1.439e-3, 0.1, epsi, 0, flav, op) if emin < 1.439e-3 else 0
             res += 5e9 * ((100 * GeVPerJoule * MeterByJoule) ** 2) / (0.8613e-3 ** 2) * \
@@ -297,11 +314,15 @@ class Flux:
 
     def nuef(self, ev):
         return (3 * ((ev * 1000 / (2 / 3 * 52)) ** 2) - 2 * (
-            (ev * 1000 / (2 / 3 * 52)) ** 2)) / 29.25 * 1000 * self.__norm  # in GeV
+            (ev * 1000 / (2 / 3 * 52)) ** 3)) / 29.25 * 1000 * self.__norm  # in GeV
 
     def nuefint(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        return quad(self.nuef, emin, self.evMax)[0]
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = quad(self.nuef, emin[i], self.evMax)[0]
+        return re
+        # return quad(self.nuef, emin, self.evMax)[0]
 
     def nuefinv(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
@@ -309,7 +330,11 @@ class Flux:
         def finv(ev):
             return self.nuef(ev) / ev
 
-        return quad(finv, emin, self.evMax)[0]
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = quad(finv, emin[i], self.evMax)[0]
+        return re
+        # return quad(finv, emin, self.evMax)[0]
 
     def nuefinvs(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
@@ -317,14 +342,22 @@ class Flux:
         def finvs(ev):
             return self.nuef(ev) / (ev ** 2)
 
-        return quad(finvs, emin, self.evMax)[0]
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = quad(finvs, emin[i], self.evMax)[0]
+        return re
+        # return quad(finvs, emin, self.evMax)[0]
 
     def numf(self, ev):
-        return (3 * ((ev * 1000 / 52) ** 2) - 2 * ((ev * 1000 / 52) ** 2)) / 26 * 1000 * self.__norm
+        return (3 * ((ev * 1000 / 52) ** 2) - 2 * ((ev * 1000 / 52) ** 3)) / 26 * 1000 * self.__norm
 
     def numfint(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        return quad(self.numf, emin, self.evMax)[0]
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = quad(self.numf, emin[i], self.evMax)[0]
+        return re
+        # return quad(self.numf, emin, self.evMax)[0]
 
     def numfinv(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
@@ -332,7 +365,11 @@ class Flux:
         def finv(ev):
             return self.numf(ev) / ev
 
-        return quad(finv, emin, self.evMax)[0]
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = quad(finv, emin[i], self.evMax)[0]
+        return re
+        # return quad(finv, emin, self.evMax)[0]
 
     def numfinvs(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
@@ -340,7 +377,11 @@ class Flux:
         def finvs(ev):
             return self.numf(ev) / (ev ** 2)
 
-        return quad(finvs, emin, self.evMax)[0]
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = quad(finvs, emin[i], self.evMax)[0]
+        return re
+        # return quad(finvs, emin, self.evMax)[0]
 
     @staticmethod
     def nupf(ev):
@@ -348,15 +389,27 @@ class Flux:
 
     def nupfint(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        return self.__norm if emin <= 0.029 else 0
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = self.__norm if emin[i] <= 0.029 else 0
+        return re
+        # return self.__norm if emin <= 0.029 else 0
 
     def nupfinv(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        return self.__norm / 0.029 if emin <= 0.029 else 0
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = self.__norm/0.029 if emin[i] <= 0.029 else 0
+        return re
+        # return self.__norm / 0.029 if emin <= 0.029 else 0
 
     def nupfinvs(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
-        return self.__norm / (0.029 ** 2) if emin <= 0.029 else 0
+        re = zeros_like(emin)
+        for i in range(emin.shape[0]):
+            re[i] = self.__norm/ (0.029 ** 2) if emin[i] <= 0.029 else 0
+        return re
+        # return self.__norm / (0.029 ** 2) if emin <= 0.029 else 0
 
 
 def couplings():
