@@ -48,8 +48,8 @@ class Chisquare:
         nui = nf * (mu * bsm + sm + nb * bg)
         ni = bsm + sm + bg
         scale = 1
-        if self.expo >= 1000:
-            scale = self.expo / 1000
+        if self.expo >= 10:
+            scale = self.expo / 10
         res = sum(ni * log(nui) - nui) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
             ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale)  # n! is constant
         # print(res)
@@ -57,8 +57,8 @@ class Chisquare:
 
     def findl0(self, bsm, sm, bg):
         scale = 1
-        if self.expo >= 1000:
-            scale = self.expo / 1000
+        if self.expo >= 10:
+            scale = self.expo / 10
 
         def f(n):
             return -self.lgl(n[0], n[1], 0, bsm, sm, bg)  # minimize
@@ -120,8 +120,8 @@ class Chisquare:
         bsm = self.binned_nsi - sm
         # print('bnsi', self.binned_nsi)
         scale = 1
-        if self.expo >= 1000:
-            scale = self.expo / 1000
+        if self.expo >= 10:
+            scale = self.expo / 10
         lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
         lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
         return -2 * scale * (lgl0 - lglmu)
@@ -142,8 +142,8 @@ class Chisquare:
         bsm = self.binned_nsi - sm
         # print('bnsi', self.binned_nsi)
         scale = 1
-        if self.expo >= 1000:
-            scale = self.expo / 1000
+        if self.expo >= 10:
+            scale = self.expo / 10
         lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
         # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
         return scale * lgl0
@@ -161,8 +161,8 @@ class Chisquare:
         bsm = self.binned_nsi_e - sm
         # print('bnsi', self.binned_nsi)
         scale = 1
-        if self.expo >= 1000:
-            scale = self.expo / 1000
+        if self.expo >= 10:
+            scale = self.expo / 10
         lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
         # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
         return scale * lgl0
