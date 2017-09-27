@@ -318,6 +318,8 @@ class Flux:
 
     def nuefint(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if type(emin) != ndarray:
+            return quad(self.nuef, emin, self.evMax)[0]
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = quad(self.nuef, emin[i], self.evMax)[0]
@@ -329,6 +331,9 @@ class Flux:
 
         def finv(ev):
             return self.nuef(ev) / ev
+
+        if type(emin) != ndarray:
+            return quad(finv, emin, self.evMax)[0]
 
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
@@ -342,6 +347,9 @@ class Flux:
         def finvs(ev):
             return self.nuef(ev) / (ev ** 2)
 
+        if type(emin) != ndarray:
+            return quad(finvs, emin, self.evMax)[0]
+
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = quad(finvs, emin[i], self.evMax)[0]
@@ -353,6 +361,8 @@ class Flux:
 
     def numfint(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if type(emin) != ndarray:
+            return quad(self.numf, emin, self.evMax)[0]
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = quad(self.numf, emin[i], self.evMax)[0]
@@ -364,6 +374,9 @@ class Flux:
 
         def finv(ev):
             return self.numf(ev) / ev
+
+        if type(emin) != ndarray:
+            return quad(finv, emin, self.evMax)[0]
 
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
@@ -377,6 +390,8 @@ class Flux:
         def finvs(ev):
             return self.numf(ev) / (ev ** 2)
 
+        if type(emin) != ndarray:
+            return quad(finvs, emin, self.evMax)[0]
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = quad(finvs, emin[i], self.evMax)[0]
@@ -389,6 +404,8 @@ class Flux:
 
     def nupfint(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if type(emin) != ndarray:
+            return self.__norm if emin <= 0.029 else 0
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = self.__norm if emin[i] <= 0.029 else 0
@@ -397,6 +414,8 @@ class Flux:
 
     def nupfinv(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if type(emin) != ndarray:
+            return self.__norm / 0.029 if emin <= 0.029 else 0
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = self.__norm/0.029 if emin[i] <= 0.029 else 0
@@ -405,6 +424,8 @@ class Flux:
 
     def nupfinvs(self, er, m):
         emin = 0.5 * (sqrt(er ** 2 + 2 * er * m) + er)
+        if type(emin) != ndarray:
+            return self.__norm / (0.029 ** 2) if emin <= 0.029 else 0
         re = zeros_like(emin)
         for i in range(emin.shape[0]):
             re[i] = self.__norm/ (0.029 ** 2) if emin[i] <= 0.029 else 0
