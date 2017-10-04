@@ -1,4 +1,4 @@
-from matplotlib.pyplot import subplots, get_cmap, legend
+from matplotlib.pyplot import subplots, get_cmap
 from chisquares import *
 
 
@@ -237,10 +237,10 @@ def plot_excl(ty, f, tag):
 def plot_combined(f, tag, th, m):
     mv = logspace(-3, -1, 5)
     if f == 'sns':
-        ueege = load('./outputdata/snsuee_excl_-' + str(int(th)) + '_10000_linear' + tag + 'Ge' + '.npy')[m]
-        ueesi = load('./outputdata/snsuee_excl_-' + str(int(th)) + '_10000_linear' + tag + 'ar' + '.npy')[m]
-        ueeged = load('./outputdata/snsuee_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'Ge' + '.npy')[m]
-        ueesid = load('./outputdata/snsuee_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'ar' + '.npy')[m]
+        ueege = load('./outputdata/snsumm_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesi = load('./outputdata/snsumm_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Si' + '.npy')[m]
+        ueeged = load('./outputdata/snsumm_excl_-' + str(int(th)) + 'd_1000_linear' + tag + 'Ge' + '.npy')[m]
+        ueesid = load('./outputdata/snsumm_excl_-' + str(int(th)) + 'd_1000_linear' + tag + 'Si' + '.npy')[m]
     elif f == 'reactor':
         ueege = load('./outputdata/reactoruee_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Ge' + '.npy')[m]
         ueesi = load('./outputdata/reactoruee_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Si' + '.npy')[m]
@@ -250,214 +250,27 @@ def plot_combined(f, tag, th, m):
         raise Exception("no such flux yet!")
     detge = Detector('Ge')
     detsi = Detector('Si')
-    # if f == 'reactor':
-    #     u = linspace(-0.1, 0.1, 100)
-    # elif f == 'sns':
-    #     u = linspace(-1, 1, 100)
-    # else:
-    #     raise Exception("no such flux yet!")
-    kge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z)
-    ksi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z)
-    low = (ksi * ueesid / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - kge * ueege / ((mv[m] ** 2) * 2 * sqrt(2) * gf)) / \
-          (ksi - kge)
-    high = (ksi * ueesi / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - kge * ueeged / ((mv[m] ** 2) * 2 * sqrt(2) * gf)) / \
-           (ksi - kge)
-    u = linspace(low, high, 100)
+    if f == 'reactor':
+        u = linspace(-0.1, 0.1, 100)
+    elif f == 'sns':
+        u = linspace(-1, 1, 100)
+    else:
+        raise Exception("no such flux yet!")
     dge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z) * (ueege / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
     ddge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z) * (ueeged / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
     dsi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z) * (ueesi / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
     ddsi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z) * (ueesid / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
-    s = zeros_like(u)
-    sd = zeros_like(u)
-    for i in range(u.shape[0]):
-        s[i] = dge[i] if dge[i] < dsi[i] else dsi[i]
-        sd[i] = ddge[i] if ddge[i] > ddsi[i] else ddsi[i]
     fig, ax = subplots()
     ax.plot(u, dge, color='red', label='ge')
     ax.plot(u, ddge, color='red')
-    ax.fill_between(u, dge, ddge, color='red', alpha=0.5)
-    ax.plot(u, dsi, color='blue', label='si' if f == 'reactor' else 'ar')
+    ax.plot(u, dsi, color='blue', label='si')
     ax.plot(u, ddsi, color='blue')
-    ax.fill_between(u, dsi, ddsi, color='blue', alpha=0.5)
-    ax.fill_between(u, s, sd, color='gray')
-    ax.set_xlim([-0.1, 0.1])
-    ax.set_ylim([-0.1, 0.1])
-    ax.set_aspect('equal')
     ax.legend()
     if f == 'sns':
-        ax.set_xlabel(r"$\epsilon^u_{ee}$")
-        ax.set_ylabel(r"$\epsilon^d_{ee}$")
+        ax.set_xlabel(r"$\epsilon^u_{\mu\mu}$")
+        ax.set_ylabel(r"$\epsilon^d_{\mu\mu}$")
     elif f == 'reactor':
         ax.set_xlabel(r"$\epsilon^u_{ee}$")
         ax.set_ylabel(r"$\epsilon^d_{ee}$")
-    ax.set_title(r"$m_v$ = 100 MeV")
-    fig.savefig('./combine_' + str(int(th)) + f + 'uee' + tag + str(m) + '.pdf')
-
-
-def plot_combine_diff(tag, th, m):
-    mv = logspace(-3, -1, 5)
-
-    def gen(f):
-        if f == 'sns':
-            ueege = load('./outputdata/snsumm_excl_-' + str(int(th)) + '_10000_linear' + tag + 'Ge' + '.npy')[m]
-            ueesi = load('./outputdata/snsumm_excl_-' + str(int(th)) + '_10000_linear' + tag + 'Si' + '.npy')[m]
-            ueeged = load('./outputdata/snsumm_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'Ge' + '.npy')[m]
-            ueesid = load('./outputdata/snsumm_excl_-' + str(int(th)) + 'd_10000_linear' + tag + 'Si' + '.npy')[m]
-        elif f == 'reactor':
-            ueege = load('./outputdata/reactoruee_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Ge' + '.npy')[m]
-            ueesi = load('./outputdata/reactoruee_excl_-' + str(int(th)) + '_1000_linear' + tag + 'Si' + '.npy')[m]
-            ueeged = load('./outputdata/reactoruee_excl_-' + str(int(th)) + 'd_1000_linear' + tag + 'Ge' + '.npy')[m]
-            ueesid = load('./outputdata/reactoruee_excl_-' + str(int(th)) + 'd_1000_linear' + tag + 'Si' + '.npy')[m]
-        else:
-            raise Exception("no such flux yet!")
-        detge = Detector('Ge')
-        detsi = Detector('Si')
-        kge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z)
-        ksi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z)
-        low = (ksi * ueesid / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - kge * ueege / ((mv[m] ** 2) * 2 * sqrt(2) * gf)) / \
-            (ksi - kge)
-        high = (ksi * ueesi / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - kge * ueeged / ((mv[m] ** 2) * 2 * sqrt(2) * gf)) / \
-            (ksi - kge)
-        u = linspace(low, high, 100)
-        dge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z) * (ueege / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
-        ddge = (2 * detge.z + detge.n) / (2 * detge.n + detge.z) * (ueeged / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
-        dsi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z) * (ueesi / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
-        ddsi = (2 * detsi.z + detsi.n) / (2 * detsi.n + detsi.z) * (ueesid / ((mv[m] ** 2) * 2 * sqrt(2) * gf) - u)
-        s = zeros_like(u)
-        sd = zeros_like(u)
-        for i in range(u.shape[0]):
-            s[i] = dge[i] if dge[i] < dsi[i] else dsi[i]
-            sd[i] = ddge[i] if ddge[i] > ddsi[i] else ddsi[i]
-        return s, sd, u
-
-    uu = linspace(-1, 1, 100)
-    sns, snsd, sx = gen('sns')
-    reac, reacd, rx = gen('reactor')
-    sns_interp = interp1d(sx, sns)
-    snsd_interp = interp1d(sx, snsd)
-    reac_interp = interp1d(rx, reac)
-    reacd_interp = interp1d(rx, reacd)
-    ux = linspace(-1.5, 1, 100)
-    uy = zeros_like(ux)
-    uyd = zeros_like(ux)
-    for eemm in ux:
-        pos = where(ux == eemm)
-        uy[pos] = -1000
-        uyd[pos] = 1000
-        for ee in rx:
-            mm = ee - eemm
-            t = reac_interp(ee)[()] - snsd_interp(mm)[()]
-            td = reacd_interp(ee)[()] - sns_interp(mm)[()]
-            uy[pos] = t if t > uy[pos] else uy[pos]
-            uyd[pos] = td if td < uyd[pos] else uyd[pos]
-    fig, ax = subplots()
-    ax.fill_between(ux, uy, uyd)
-    ax.set_xlabel(r"$\epsilon^{u}_{ee}-\epsilon^{u}_{\mu\mu}$")
-    ax.set_ylabel(r"$\epsilon^{d}_{ee}-\epsilon^{d}_{\mu\mu}$")
-    fig.savefig("./test.pdf")
-
-
-def plot_excl_v2(f, nsi='ee'):
-    blist = [100, 1, 1e-2]
-    elist = [5000, 10000, 100000, 300000]
-    fig, axes = subplots(3, 4, sharex='col', sharey='row', figsize=(12, 9))
-    if f == 'reactor':
-        nsi = 'ee'
-        d1 = 'si'
-        d2 = 'ge'
-    elif f == 'sns':
-        d1 = 'csi'
-        d2 = 'ar'
-    else:
-        raise Exception("no such flux data yet!")
-    for i in range(3):
-        for j in range(4):
-            f2 = load("./outputdata/" + d2 + f + nsi + str(int(elist[j])) + 'expo' + str(int(blist[i])) + ".npz")
-            if f == 'sns':
-                f1 = load("./outputdata/" + d1 + f + nsi + '4466' + 'expo' + '0' + ".npz")
-            else:
-                f1 = load("./outputdata/" + d1 + f + nsi + str(int(elist[j])) + 'expo' + str(int(blist[i])) + ".npz")
-            eu = f1['arr_0']
-            e1dl = f1['arr_1']
-            e1dh = f1['arr_2']
-            e1dl2 = f1['arr_3']
-            e1dh2 = f1['arr_4']
-            e2dl = f2['arr_1']
-            e2dh = f2['arr_2']
-            e2dl2 = f2['arr_3']
-            e2dh2 = f2['arr_4']
-            axes[i][j].fill_between(eu, e1dl, e1dh, color='blue', alpha=0.5)
-            axes[i][j].fill_between(eu, e1dl2, e1dh2, color='blue', alpha=0.5)
-            axes[i][j].fill_between(eu, e2dl, e2dh, color='red', alpha=0.5)
-            axes[i][j].fill_between(eu, e2dl2, e2dh2, color='red', alpha=0.5)
-            axes[i][j].plot(eu, e1dl, color='blue', alpha=0.5, label=d1)
-            axes[i][j].plot(eu, e2dl, color='red', alpha=0.5, label=d2)
-            # axes[i][j].legend()
-            axes[i][j].set_xlim([-1, 1])
-            axes[i][j].set_ylim([-1, 1])
-            axes[i][j].yaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
-            axes[i][j].xaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
-    for i in range(3):
-        axes[i][0].set_ylabel("background: {} dru".format(blist[i]))
-    for j in range(4):
-        axes[2][j].set_xlabel("exposure: {} kg*days".format(elist[j]))
-    axes[0][3].legend(loc='upper right')
-    # fig.text(0.5, 0.04, r"$\epsilon_{ee}^{u}$", ha='center')
-    # fig.text(0.04, 0.5, r"$\epsilon_{ee}^{d}$", va='center', rotation='vertical')
-    fig.tight_layout()
-    fig.savefig('./' + f + nsi + '.pdf')
-
-
-def plot_excl_v3(f, nsi='ee'):
-    if f == 'reactor':
-        bgl = [10, 1]
-        exl = [5000, 50000]
-        nsi = 'ee'
-        d1 = 'si'
-        d2 = 'ge'
-    elif f == 'sns':
-        bgl = [5e-3, 0]
-        exl = [5000, 50000]
-        d1 = 'csi'
-        d2 = 'ar'
-    else:
-        raise Exception('no such flux')
-    for b in bgl:
-        for ex in exl:
-            f1 = load('./outputdata/' + d1 + f + nsi + str(int(ex)) + 'expo' + str(b) + '.npz')
-            f2 = load('./outputdata/' + d2 + f + nsi + str(int(ex)) + 'expo' + str(b) + '.npz')
-            eu = f1['arr_0']
-            e1dl = f1['arr_1']
-            e1dh = f1['arr_2']
-            e1dl2 = f1['arr_3']
-            e1dh2 = f1['arr_4']
-            e2dl = f2['arr_1']
-            e2dh = f2['arr_2']
-            e2dl2 = f2['arr_3']
-            e2dh2 = f2['arr_4']
-            edl1 = zeros_like(eu)
-            edh1 = zeros_like(eu)
-            edl2 = zeros_like(eu)
-            edh2 = zeros_like(eu)
-            for i in range(eu.shape[0]):
-                edl1[i] = e1dl[i] if e1dl[i] > e2dl[i] else e2dl[i]
-                edh1[i] = e1dh[i] if e1dh[i] < e2dh[i] else e2dh[i]
-                edl2[i] = e1dl2[i] if e1dl2[i] > e2dl2[i] else e2dl2[i]
-                edh2[i] = e1dh2[i] if e1dh2[i] < e2dh2[i] else e2dh2[i]
-            fig, ax = subplots()
-            ax.fill_between(eu, e1dl, e1dh, color='blue', alpha=0.2, label=d1)
-            ax.fill_between(eu, e1dl2, e1dh2, color='blue', alpha=0.2)
-            ax.fill_between(eu, e2dl, e2dh, color='red', alpha=0.2, label=d2)
-            ax.fill_between(eu, e2dl2, e2dh2, color='red', alpha=0.2)
-            ax.fill_between(eu, edl1, edh1, where=edh1 >= edl1, color='gray', alpha=0.8)
-            ax.fill_between(eu, edl2, edh2, where=edh2 >= edl2, color='gray', alpha=0.8 , label='combined')
-            # ax.plot(eu, e1dl, c  lor='red', alpha=0, label=d2)
-            ax.set_xlim([-1, 1])
-            ax.set_ylim([-1, 1])
-            ax.yaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
-            ax.xaxis.set_ticks([-1, -0.5, 0, 0.5, 1])
-            ax.legend()
-            ax.set_xlabel("$\epsilon_{ee}^u$" if nsi == 'ee' else "$\epsilon_{\mu\mu}^u$")
-            ax.set_ylabel("$\epsilon_{ee}^d$" if nsi == 'ee' else "$\epsilon_{\mu\mu}^d$")
-            fig.tight_layout()
-            fig.savefig('./' + f + nsi + str(int(ex)) + 'expo' + str(b) + '.pdf')
+    ax.set_title(r"$m_v$ = {0:.1e} MeV, $m_t$ = {1} MeV".format(mv[m] * 1000, th * 100))
+    fig.savefig('./plots/combine_' + str(int(th)) + f + tag + str(m) + '.pdf')
