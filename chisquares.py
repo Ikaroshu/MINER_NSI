@@ -2,6 +2,7 @@ from scipy.optimize import minimize, root
 from scipy.interpolate import Rbf
 from events import *
 from multiprocessing.pool import Pool
+from scipy.special import gammaln
 
 
 class Chisquare:
@@ -52,6 +53,17 @@ class Chisquare:
             scale = self.expo / 10
         res = sum(ni * log(nui) - nui) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
             ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale)  # n! is constant
+        # print(res)
+        return res
+
+    def lgl_nus(self, nf, nb, mu, bsm, sm, bg):
+        nui = nf * (mu * bsm + sm + nb * bg)
+        ni = bsm + sm + bg
+        scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        res = sum(ni * log(nui) - nui) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
+            ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale - gammaln(ni))  # n! is constant
         # print(res)
         return res
 
@@ -146,6 +158,28 @@ class Chisquare:
         lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
         # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
         return scale * lgl0
+
+    def l0_nus(self, coup, nf, nb):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus(nf, nb, 0, bsm, sm, self.binned_bg)
 
     def le0(self, coup):
         if self.th != self.det.erMin:
