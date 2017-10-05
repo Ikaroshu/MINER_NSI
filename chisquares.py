@@ -62,8 +62,8 @@ class Chisquare:
         scale = 1
         # if self.expo >= 10:
         #     scale = self.expo / 10
-        res = sum(ni * log(nui) - nui) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
-            ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale - gammaln(ni))  # n! is constant
+        res = sum(ni * log(nui) - nui - gammaln(ni)) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
+            ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale)  # n! is constant
         # print(res)
         return res
 
