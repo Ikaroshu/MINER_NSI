@@ -87,6 +87,7 @@ def rates(er, mv, det, fx, g):  # per nucleus
 
 
 def totoal(expo, mv, det, fx, g):
+    # print('g', g)
     if fx.ty == 'sns':
         return quad(snsrates, det.erMin, det.erMax, args=(mv, det, fx, g))[0] * \
                expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / dot(det.m, det.fraction)
@@ -95,7 +96,7 @@ def totoal(expo, mv, det, fx, g):
 
 
 def binned_events(era, erb, expo, mv, det, fx, g):
-    if fx.ty == 'sns':
+    if fx.ty == 'sns': # 不严谨
         return quad(snsrates, era, erb, args=(mv, det, fx, g,))[0] * \
                expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / dot(det.m, det.fraction)
     return quad(rates, era, erb, args=(mv, det, fx, g))[0] * expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / \
@@ -103,7 +104,7 @@ def binned_events(era, erb, expo, mv, det, fx, g):
 
 
 def binned_background(era, erb, det, expo):
-    return det.background * (erb - era) * expo * 1000  # because dru is per kev
+    return det.background * (erb - era) * expo * 1e6  # because dru is per kev
 
 
 def ratesm(er, mv, det, fx, g):
@@ -197,7 +198,6 @@ def re(er, mv, det, fx, g):
 
 def binned_events_e(era, erb, expo, mv, det, fx, g):
     if fx.ty == 'sns':
-    # todo:需不需要efficiency curve，对于电离能量的对比
         return quad(re, era, erb, args=(mv, det, fx, g))[0] * \
                expo * JoulePerKg * GeVPerJoule * 24 * 60 * 60 / dot(det.m, det.fraction)
     return quad(rates_e, era, erb, args=(mv, det, fx, g))[0] * \

@@ -37,7 +37,7 @@ def oparameters():
 
 class Densityp:
     def __init__(self):
-        density = genfromtxt('densitydata.txt', delimiter='  ')
+        density = genfromtxt('./solarnu/densitydata.txt', delimiter='  ')
         rs = density[:, 1]
         rho = density[:, 3]
         npd = rho * (density[:, 6] / massofh + density[:, 7] / massof4he * 2 + density[:, 8] / massof3he * 2 +
@@ -148,7 +148,7 @@ class Detector:
             self.erMin = 30 * (10 ** -6)
             self.erMax = 1e-4
             self.background = 5e-3
-            self.bgUn = 0.1
+            self.bgUn = 0.05
         elif ty.lower() == 'csi':
             self.nIso = 2
             self.z = array([55, 53])
@@ -158,7 +158,7 @@ class Detector:
             self.erMin = 4.25 * (10 ** -6)
             self.erMax = 26 * (10 ** -6)
             self.background = 5e-3
-            self.bgUn = 0.1
+            self.bgUn = 0.05
         elif ty.lower() == 'xe':
             self.nIso = 7
             self.z = array([54])
@@ -174,7 +174,7 @@ class Detector:
             self.erMin = 2 * (10 ** -6)
             self.erMax = 4e-5
             self.background = 5e-3
-            self.bgUn = 0.1
+            self.bgUn = 0.05
         else:
             raise Exception("No such detector defined in code yet.")
 
@@ -203,7 +203,7 @@ class Flux:
         elif ty.lower() == 'sns':
             self.evMin = 0
             self.evMax = 52 * (10 ** -3)
-            self.flUn = 0.02
+            self.flUn = 0.1
             self.__norm = 1.05 * (10 ** 11) * ((MeterByJoule * GeVPerJoule) ** 2)
         elif ty.lower() == 'solar':
             b8 = genfromtxt('./b8.csv', delimiter=',')

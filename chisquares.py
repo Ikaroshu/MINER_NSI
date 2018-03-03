@@ -51,7 +51,7 @@ class Chisquare:
         scale = 1
         if self.expo >= 10:
             scale = self.expo / 10
-        res = sum(ni * log(nui) - nui) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
+        res = sum(ni * log(nui) - nui - gammaln(ni+1)) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
             ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale)  # n! is constant
         # print(res)
         return res
@@ -62,8 +62,28 @@ class Chisquare:
         scale = 1
         # if self.expo >= 10:
         #     scale = self.expo / 10
-        res = sum(ni * log(nui) - nui - gammaln(ni)) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
+        res = sum(ni * log(nui) - nui - gammaln(ni+1)) - ((nf - 1) ** 2) / (2 * (self.fx.flUn ** 2) * scale) - \
             ((nb - 1) ** 2) / (2 * (self.det.bgUn ** 2) * scale)  # n! is constant
+        # print(res)
+        return res
+
+    def lgl_nus_te(self, nf, nb, mu, bsm, sm, bg):
+        nui = nf * (mu * bsm + sm + nb * bg)
+        ni = bsm + sm + bg
+        scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        res = sum(ni * log(nui) - nui - gammaln(ni+1))  # n! is constant
+        # print(res)
+        return res
+
+    def lgl_nus_obg(self, nf, nb, mu, bsm, sm, bg):
+        nui = nf * (mu * bsm + sm) + nb * bg
+        ni = bsm + sm + bg
+        scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        res = sum(ni * log(nui) - nui - gammaln(ni+1))  # n! is constant
         # print(res)
         return res
 
@@ -181,6 +201,138 @@ class Chisquare:
         # return scale * lgl0
         return self.lgl_nus(nf, nb, 0, bsm, sm, self.binned_bg)
 
+    def l0_nof(self, coup, nb):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus(1, nb, 0, bsm, sm, self.binned_bg)
+
+    def l0_nob(self, coup, nf):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus(nf, 1, 0, bsm, sm, self.binned_bg)
+
+    def l0_nob_te(self, coup, nf):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus_te(nf, 1, 0, bsm, sm, self.binned_bg)
+
+    def l0_nus_obg(self, coup, nf, nb):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus_obg(nf, nb, 0, bsm, sm, self.binned_bg)
+
+    def l0_nob_obg(self, coup, nf):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus_obg(nf, 1, 0, bsm, sm, self.binned_bg)
+
+    def l0_nof_obg(self, coup, nb):
+        if self.th != self.det.erMin:
+            self.binned_sm = \
+                array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, couplings())
+                       for i in range(self.ebin.shape[0] - 1)])
+            self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
+                                    for i in range(self.ebin.shape[0] - 1)])
+            self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
+        sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
+                    for i in range(self.ebin.shape[0] - 1)])
+        bsm = self.binned_nsi - sm
+        # print('bnsi', self.binned_nsi)
+        # scale = 1
+        # if self.expo >= 10:
+        #     scale = self.expo / 10
+        # lgl0 = self.findl0(bsm / scale, sm / scale, self.binned_bg / scale)
+        # # lglmu = self.lgl(1, 1, 1, bsm / scale, sm / scale, self.binned_bg / scale)
+        # return scale * lgl0
+        return self.lgl_nus_obg(1, nb, 0, bsm, sm, self.binned_bg)
+
     def le0(self, coup):
         if self.th != self.det.erMin:
             self.binned_sm = \
@@ -208,6 +360,8 @@ class Chisquare:
             self.binned_bg = array([binned_background(self.ebin[i], self.ebin[i + 1], self.det, self.expo)
                                     for i in range(self.ebin.shape[0] - 1)])
             self.th = self.det.erMin
+        if self.det.ty == 'csi' and self.ebin.shape[0]-1 == 1:
+            self.binned_nsi = array([134])
         sm = array([binned_events(self.ebin[i], self.ebin[i + 1], self.expo, self.mv, self.det, self.fx, coup)
                     for i in range(self.ebin.shape[0] - 1)])
         bsm = self.binned_nsi - sm

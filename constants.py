@@ -18,8 +18,14 @@ massof16o = 2.656018e-23
 # in GeV
 massofe = 5.11e-4
 rho = 1.0086
-knu = 0.99878
+knu = 0.9978
 lul = -0.0031
 ldl = -0.0025
 ldr = 7.5e-5
 lur = ldr / 2
+
+mtau = 1.77699
+mmu = 105.658369e-3
+mb = 4.18
+
+echarge = 0.303
